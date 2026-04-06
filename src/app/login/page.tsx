@@ -19,10 +19,8 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    // Simulation d'authentification (à remplacer par Supabase Auth)
     await new Promise(r => setTimeout(r, 1000));
 
-    // Demo: accepter les comptes de demo-data
     const validUsers = [
       { email: 'admin@cth-madagascar.mg', password: 'Admin@CTH2026!' },
       { email: 'fety@cth-madagascar.mg', password: 'Medecin@CTH2026!' },
@@ -32,7 +30,6 @@ export default function LoginPage() {
 
     const user = validUsers.find(u => u.email === email && u.password === password);
     if (user) {
-      // Enregistrer le log de connexion
       const loginLog = {
         email: user.email,
         action: 'login',
@@ -44,18 +41,15 @@ export default function LoginPage() {
       logs.push(loginLog);
       localStorage.setItem('cth_auth_logs', JSON.stringify(logs));
 
-      // Sauvegarder la session avec expiration 1h
       const session = {
         email: user.email,
         loginAt: Date.now(),
-        expiresAt: Date.now() + 60 * 60 * 1000, // 1 heure
+        expiresAt: Date.now() + 60 * 60 * 1000,
       };
       localStorage.setItem('cth_session', JSON.stringify(session));
-
       window.location.href = '/dashboard';
     } else {
       setError('Adresse e-mail ou mot de passe incorrect.');
-      // Log tentative échouée
       const logs = JSON.parse(localStorage.getItem('cth_auth_logs') || '[]');
       logs.push({ email, action: 'login_failed', timestamp: new Date().toISOString(), ip: 'local' });
       localStorage.setItem('cth_auth_logs', JSON.stringify(logs));
@@ -72,47 +66,48 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f0f4f8] via-[#e8eef5] to-[#dce5f0] p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f0f4f8] via-[#e8eef5] to-[#dce5f0] p-6 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-[var(--primary)]/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-[var(--secondary)]/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
-      <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-[var(--accent)]/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
 
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-[420px] relative z-10">
         {/* Logo et titre */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-2xl overflow-hidden mx-auto mb-4 shadow-xl">
-            <Image src="/images/logo-cth.png" alt="Logo CTH Madagascar" width={80} height={80} className="w-full h-full object-cover" />
+        <div className="text-center mb-6">
+          <div className="w-24 h-24 rounded-2xl overflow-hidden mx-auto mb-3 shadow-xl ring-4 ring-white/50">
+            <Image src="/images/logo-cth.png" alt="Logo CTH Madagascar" width={96} height={96} className="w-full h-full object-cover" priority />
           </div>
-          <h1 className="text-2xl font-bold text-[var(--primary)]">CTH Madagascar</h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">Centre de Traitement de l&apos;Hémophilie</p>
+          <h1 className="text-2xl font-bold text-[var(--primary)] mt-3">CTH Madagascar</h1>
+          <p className="text-sm text-[var(--text-secondary)] mt-0.5">Centre de Traitement de l&apos;Hémophilie</p>
         </div>
 
         {/* Card de connexion */}
-        <div className="glass-card !bg-white/70 !backdrop-blur-xl shadow-2xl">
+        <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-white/60 shadow-2xl shadow-black/5 p-7">
           {!showForgot ? (
             <>
-              <div className="flex items-center gap-2 mb-6">
-                <ShieldCheck size={24} weight="duotone" className="text-[var(--primary)]" />
+              <div className="flex items-center gap-2.5 mb-5">
+                <ShieldCheck size={22} weight="duotone" className="text-[var(--primary)]" />
                 <h2 className="text-lg font-bold text-[var(--text-primary)]">Connexion sécurisée</h2>
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200/50 mb-4 animate-fade-in">
+                <div className="flex items-center gap-2.5 p-3 rounded-xl bg-red-50 border border-red-200/50 mb-5 animate-fade-in">
                   <Warning size={18} weight="duotone" className="text-red-500 flex-shrink-0" />
                   <p className="text-sm text-red-700">{error}</p>
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Adresse e-mail</label>
+                  <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">Adresse e-mail</label>
                   <div className="relative">
-                    <Envelope size={18} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center pointer-events-none">
+                      <Envelope size={18} weight="duotone" className="text-[var(--text-muted)]" />
+                    </div>
                     <input
                       type="email"
-                      className="glass-input w-full pl-10"
-                      placeholder="votre.email@cth-madagascar.mg"
+                      className="w-full h-12 rounded-xl bg-gray-50 border border-gray-200 px-4 pl-11 text-sm text-[var(--text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
+                      placeholder="exemple@cth-madagascar.mg"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
                       required
@@ -120,14 +115,17 @@ export default function LoginPage() {
                     />
                   </div>
                 </div>
+
                 <div>
-                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">Mot de passe</label>
+                  <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">Mot de passe</label>
                   <div className="relative">
-                    <Lock size={18} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center pointer-events-none">
+                      <Lock size={18} weight="duotone" className="text-[var(--text-muted)]" />
+                    </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      className="glass-input w-full pl-10 pr-10"
-                      placeholder="Votre mot de passe"
+                      className="w-full h-12 rounded-xl bg-gray-50 border border-gray-200 px-4 pl-11 pr-11 text-sm text-[var(--text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
+                      placeholder="Entrez votre mot de passe"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       required
@@ -136,7 +134,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                      className="absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       {showPassword ? <EyeSlash size={18} weight="duotone" /> : <Eye size={18} weight="duotone" />}
                     </button>
@@ -146,13 +144,13 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="btn btn-primary w-full !py-3 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 rounded-xl bg-[var(--primary)] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)]/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[var(--primary)]/20"
                 >
                   {loading ? (
-                    <span className="flex items-center justify-center gap-2">
+                    <>
                       <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Connexion en cours...
-                    </span>
+                    </>
                   ) : (
                     <>
                       <ShieldCheck size={20} weight="duotone" />
@@ -172,13 +170,13 @@ export default function LoginPage() {
               </div>
 
               {/* Info sécurité */}
-              <div className="mt-6 pt-4 border-t border-gray-100">
-                <div className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
-                  <ShieldCheck size={14} weight="duotone" className="flex-shrink-0 mt-0.5 text-emerald-500" />
+              <div className="mt-5 pt-4 border-t border-gray-100">
+                <div className="flex items-start gap-2 text-[0.7rem] text-gray-400 leading-relaxed">
+                  <ShieldCheck size={14} weight="duotone" className="flex-shrink-0 mt-0.5 text-emerald-400" />
                   <p>
                     Connexion sécurisée • Déconnexion automatique après 1h d&apos;inactivité •
                     Seul l&apos;administrateur peut créer des comptes •
-                    Les données patients sont protégées conformément aux normes RGPD
+                    Données protégées (RGPD)
                   </p>
                 </div>
               </div>
@@ -188,22 +186,24 @@ export default function LoginPage() {
               <h2 className="text-lg font-bold text-[var(--text-primary)] mb-2">Récupération du mot de passe</h2>
               {!forgotSent ? (
                 <>
-                  <p className="text-sm text-[var(--text-secondary)] mb-4">
+                  <p className="text-sm text-[var(--text-secondary)] mb-5">
                     Entrez votre adresse e-mail. Un lien de réinitialisation vous sera envoyé.
                   </p>
-                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                  <form onSubmit={handleForgotPassword} className="space-y-5">
                     <div className="relative">
-                      <Envelope size={18} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                      <div className="absolute left-0 top-0 bottom-0 w-11 flex items-center justify-center pointer-events-none">
+                        <Envelope size={18} weight="duotone" className="text-[var(--text-muted)]" />
+                      </div>
                       <input
                         type="email"
-                        className="glass-input w-full pl-10"
-                        placeholder="votre.email@cth-madagascar.mg"
+                        className="w-full h-12 rounded-xl bg-gray-50 border border-gray-200 px-4 pl-11 text-sm text-[var(--text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
+                        placeholder="exemple@cth-madagascar.mg"
                         value={forgotEmail}
                         onChange={e => setForgotEmail(e.target.value)}
                         required
                       />
                     </div>
-                    <button type="submit" disabled={loading} className="btn btn-primary w-full !py-3 disabled:opacity-50">
+                    <button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-[var(--primary)] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)]/90 transition-all disabled:opacity-50">
                       {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
                     </button>
                   </form>
@@ -216,11 +216,10 @@ export default function LoginPage() {
                   <h3 className="font-bold text-emerald-800 mb-2">E-mail envoyé !</h3>
                   <p className="text-sm text-[var(--text-secondary)]">
                     Si un compte existe pour <strong>{forgotEmail}</strong>, vous recevrez un lien de réinitialisation.
-                    Vérifiez également vos spams.
                   </p>
                 </div>
               )}
-              <button onClick={() => { setShowForgot(false); setForgotSent(false); }} className="text-sm text-[var(--accent)] hover:underline font-medium mt-4 block mx-auto">
+              <button onClick={() => { setShowForgot(false); setForgotSent(false); }} className="text-sm text-[var(--accent)] hover:underline font-medium mt-5 block mx-auto">
                 ← Retour à la connexion
               </button>
             </>
@@ -228,7 +227,7 @@ export default function LoginPage() {
         </div>
 
         {/* Pied de page */}
-        <p className="text-center text-xs text-[var(--text-muted)] mt-6">
+        <p className="text-center text-[0.7rem] text-gray-400 mt-5">
           © {new Date().getFullYear()} CTH Madagascar • Application à usage médical confidentiel
         </p>
       </div>
