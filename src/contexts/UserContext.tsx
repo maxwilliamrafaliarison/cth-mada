@@ -61,19 +61,37 @@ export function UserProvider({ children }: { children: ReactNode }) {
           .single();
 
         if (profileData) {
-          // Fetch all centres for this user (for doctors working at multiple centers)
-          const { data: userCentres } = await supabase
-            .from('utilisateur_centres')
-            .select('*, centre:centres(*)')
-            .eq('utilisateur_id', profileData.id);
+          let centresList: { id: string; nom: string; code: string; ville: string; est_principal: boolean }[] = [];
 
-          const centresList = userCentres?.map(uc => ({
-            id: uc.centre?.id || uc.centre_id,
-            nom: uc.centre?.nom || '',
-            code: uc.centre?.code || '',
-            ville: uc.centre?.ville || '',
-            est_principal: uc.est_principal,
-          })) || [];
+          // Admins can navigate all centres
+          if (profileData.role === 'administrateur') {
+            const { data: allCentres } = await supabase
+              .from('centres')
+              .select('*')
+              .order('nom', { ascending: true });
+
+            centresList = (allCentres || []).map(c => ({
+              id: c.id,
+              nom: c.nom,
+              code: c.code,
+              ville: c.ville,
+              est_principal: c.id === profileData.centre_id,
+            }));
+          } else {
+            // Fetch assigned centres for doctors/pharmacists
+            const { data: userCentres } = await supabase
+              .from('utilisateur_centres')
+              .select('*, centre:centres(*)')
+              .eq('utilisateur_id', profileData.id);
+
+            centresList = userCentres?.map(uc => ({
+              id: uc.centre?.id || uc.centre_id,
+              nom: uc.centre?.nom || '',
+              code: uc.centre?.code || '',
+              ville: uc.centre?.ville || '',
+              est_principal: uc.est_principal,
+            })) || [];
+          }
 
           const fullProfile: UserProfile = {
             ...profileData,
