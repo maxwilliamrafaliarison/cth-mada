@@ -1,9 +1,11 @@
 'use client';
 
 import Navbar from '@/components/layout/Navbar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ClipboardText, Plus, MagnifyingGlass, Clock, CheckCircle, XCircle, UserCircle, Pill } from '@phosphor-icons/react';
-import { prescriptions, patients, medicaments, centres } from '@/lib/demo-data';
+import { getPrescriptions } from '@/app/actions/prescriptions';
+import { getPatients } from '@/app/actions/patients';
+import { getMedicaments } from '@/app/actions/stock';
 import type { TypeSaignement } from '@/types';
 
 const TYPES_SAIGNEMENT: TypeSaignement[] = [
@@ -26,14 +28,73 @@ export default function PrescriptionsPage() {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
   const [filterStatut, setFilterStatut] = useState('');
+  const [prescriptionsData, setPrescriptionsData] = useState<any[]>([]);
+  const [patientsData, setPatientsData] = useState<any[]>([]);
+  const [medicamentsData, setMedicamentsData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = prescriptions.filter(rx => {
-    const patient = patients.find(p => p.id === rx.patient_id);
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [rxData, patData, medData] = await Promise.all([
+          getPrescriptions(),
+          getPatients({ statut: 'Actif' }),
+          getMedicaments(),
+        ]);
+        setPrescriptionsData(rxData);
+        setPatientsData(patData);
+        setMedicamentsData(medData);
+      } catch (err) {
+        console.error('Erreur chargement prescriptions:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const filtered = prescriptionsData.filter(rx => {
+    const patient = rx.patient;
     const matchSearch = !search ||
       `${patient?.nom} ${patient?.prenom} ${rx.numero}`.toLowerCase().includes(search.toLowerCase());
     const matchStatut = !filterStatut || rx.statut === filterStatut;
     return matchSearch && matchStatut;
   }).sort((a, b) => new Date(b.date_prescription).getTime() - new Date(a.date_prescription).getTime());
+
+  if (loading) {
+    return (
+      <>
+        <Navbar titre="Prescriptions médicales" />
+        <main className="p-4 md:p-6">
+          <div className="glass-card !p-4 mb-6 animate-pulse">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="h-10 bg-gray-200 rounded-lg flex-1 min-w-[180px]" />
+              <div className="h-10 bg-gray-200 rounded-lg w-40" />
+              <div className="h-10 bg-gray-200 rounded-lg w-48" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="glass-card animate-pulse">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gray-200 flex-shrink-0" />
+                  <div className="flex-1 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-1/3" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                    <div className="h-8 bg-gray-200 rounded w-1/2" />
+                  </div>
+                  <div className="w-24 space-y-2">
+                    <div className="h-6 bg-gray-200 rounded" />
+                    <div className="h-4 bg-gray-200 rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -57,7 +118,7 @@ export default function PrescriptionsPage() {
 
         <div className="space-y-4">
           {filtered.map(rx => {
-            const patient = patients.find(p => p.id === rx.patient_id);
+            const patient = rx.patient;
             const config = statutConfig[rx.statut] || statutConfig['En attente'];
             const StatusIcon = config.icon;
             return (
@@ -76,16 +137,13 @@ export default function PrescriptionsPage() {
                       <span className="font-mono text-xs">{rx.numero}</span> • {rx.type_traitement} • {rx.type_saignement || 'Non spécifié'}
                     </p>
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {rx.lignes.map(ligne => {
-                        const med = medicaments.find(m => m.id === ligne.medicament_id);
-                        return (
-                          <div key={ligne.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/50 border border-gray-100">
-                            <Pill size={14} weight="duotone" className="text-[var(--accent)]" />
-                            <span className="text-sm font-medium">{med?.nom_complet}</span>
-                            <span className="text-xs text-[var(--text-muted)]">× {ligne.quantite_prescrite} {med?.unite}</span>
-                          </div>
-                        );
-                      })}
+                      {rx.lignes?.map((ligne: any) => (
+                        <div key={ligne.id} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/50 border border-gray-100">
+                          <Pill size={14} weight="duotone" className="text-[var(--accent)]" />
+                          <span className="text-sm font-medium">{ligne.medicament?.nom_complet}</span>
+                          <span className="text-xs text-[var(--text-muted)]">× {ligne.quantite_prescrite}</span>
+                        </div>
+                      ))}
                     </div>
                     {rx.autres_precisions && <p className="text-xs text-[var(--text-muted)] italic">{rx.autres_precisions}</p>}
                   </div>
@@ -105,12 +163,12 @@ export default function PrescriptionsPage() {
             <div className="glass-card w-full max-w-2xl max-h-[85vh] overflow-y-auto !bg-white/90" onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-bold text-[var(--text-primary)] mb-5">Nouvelle prescription</h3>
               <div className="space-y-4">
-                <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Patient *</label><select className="glass-select w-full"><option value="">Sélectionner un patient</option>{patients.filter(p => p.statut === 'Actif').map(p => <option key={p.id} value={p.id}>{p.numero_cth} - {p.nom} {p.prenom} ({p.type_hemophilie === 'HA' ? 'Hémo. A' : 'Hémo. B'})</option>)}</select></div>
+                <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Patient *</label><select className="glass-select w-full"><option value="">Sélectionner un patient</option>{patientsData.map(p => <option key={p.id} value={p.id}>{p.numero_cth} - {p.nom} {p.prenom} ({p.type_hemophilie === 'HA' ? 'Hémo. A' : 'Hémo. B'})</option>)}</select></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Type de traitement *</label><select className="glass-select w-full"><option value="Demande">À la demande (épisode aigu)</option><option value="Prophylaxie">Prophylaxie</option><option value="Pré-opératoire">Pré-opératoire</option><option value="Post-opératoire">Post-opératoire</option></select></div>
                   <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Type de saignement aigu</label><select className="glass-select w-full"><option value="">Non applicable</option>{TYPES_SAIGNEMENT.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                 </div>
-                <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Médicament prescrit *</label><select className="glass-select w-full"><option value="">Sélectionner un médicament</option>{medicaments.map(m => <option key={m.id} value={m.id}>{m.nom_complet} ({m.type_facteur} - {m.indication})</option>)}</select></div>
+                <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Médicament prescrit *</label><select className="glass-select w-full"><option value="">Sélectionner un médicament</option>{medicamentsData.map(m => <option key={m.id} value={m.id}>{m.nom_complet} ({m.type_facteur} - {m.indication})</option>)}</select></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Quantité prescrite (UI/mg) *</label><input type="number" className="glass-input w-full" placeholder="Ex : 1000" /></div>
                   <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Posologie</label><input type="text" className="glass-input w-full" placeholder="Ex : 500 UI x 2/jour" /></div>

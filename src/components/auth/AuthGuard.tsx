@@ -2,89 +2,55 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { createBrowserSupabaseClient } from '@/lib/supabase';
 
-const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 heure en ms
 const ACTIVITY_CHECK_INTERVAL = 60 * 1000; // Vérifier chaque minute
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [authenticated, setAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
+  const supabase = createBrowserSupabaseClient();
 
-  const logout = useCallback((reason: string = 'manual') => {
-    const session = localStorage.getItem('cth_session');
-    if (session) {
-      const parsed = JSON.parse(session);
-      // Log de déconnexion
-      const logs = JSON.parse(localStorage.getItem('cth_auth_logs') || '[]');
-      logs.push({
-        email: parsed.email,
-        action: reason === 'timeout' ? 'auto_logout' : 'logout',
-        timestamp: new Date().toISOString(),
-        reason,
-      });
-      localStorage.setItem('cth_auth_logs', JSON.stringify(logs));
-    }
-    localStorage.removeItem('cth_session');
-    router.push('/login');
-  }, [router]);
+  const checkSession = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
 
-  const checkSession = useCallback(() => {
-    const sessionStr = localStorage.getItem('cth_session');
-    if (!sessionStr) {
+    if (!user) {
       setAuthenticated(false);
       setChecking(false);
       router.push('/login');
       return false;
     }
 
-    const session = JSON.parse(sessionStr);
-    const now = Date.now();
-
-    // Vérifier l'expiration de session (1h sans activité)
-    if (now > session.expiresAt) {
-      logout('timeout');
-      return false;
-    }
-
     setAuthenticated(true);
     setChecking(false);
     return true;
-  }, [router, logout]);
-
-  // Renouveler le timer d'activité à chaque interaction
-  const resetActivityTimer = useCallback(() => {
-    const sessionStr = localStorage.getItem('cth_session');
-    if (sessionStr) {
-      const session = JSON.parse(sessionStr);
-      session.expiresAt = Date.now() + SESSION_TIMEOUT;
-      session.lastActivity = new Date().toISOString();
-      localStorage.setItem('cth_session', JSON.stringify(session));
-    }
-  }, []);
+  }, [supabase, router]);
 
   useEffect(() => {
     // Vérification initiale
     checkSession();
 
-    // Vérification périodique de l'expiration
+    // Écouter les changements de session Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setAuthenticated(false);
+        router.push('/login');
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setAuthenticated(true);
+      }
+    });
+
+    // Vérification périodique
     const interval = setInterval(() => {
       checkSession();
     }, ACTIVITY_CHECK_INTERVAL);
 
-    // Écouter l'activité utilisateur pour renouveler le timer
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
-    events.forEach(event => {
-      window.addEventListener(event, resetActivityTimer, { passive: true });
-    });
-
     return () => {
       clearInterval(interval);
-      events.forEach(event => {
-        window.removeEventListener(event, resetActivityTimer);
-      });
+      subscription.unsubscribe();
     };
-  }, [checkSession, resetActivityTimer]);
+  }, [checkSession, supabase, router]);
 
   if (checking) {
     return (

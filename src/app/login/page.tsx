@@ -1,68 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import Image from 'next/image';
 import { Envelope, Lock, Eye, EyeSlash, ShieldCheck, Warning } from '@phosphor-icons/react';
+import { login, forgotPassword } from '@/app/actions/auth';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [isPending, startTransition] = useTransition();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (formData: FormData) => {
     setError('');
-    setLoading(true);
-
-    await new Promise(r => setTimeout(r, 1000));
-
-    const validUsers = [
-      { email: 'admin@cth-madagascar.mg', password: 'Admin@CTH2026!' },
-      { email: 'fety@cth-madagascar.mg', password: 'Medecin@CTH2026!' },
-      { email: 'fitahiana@cth-madagascar.mg', password: 'Medecin@CTH2026!' },
-      { email: 'pharma@cth-madagascar.mg', password: 'Pharma@CTH2026!' },
-    ];
-
-    const user = validUsers.find(u => u.email === email && u.password === password);
-    if (user) {
-      const loginLog = {
-        email: user.email,
-        action: 'login',
-        timestamp: new Date().toISOString(),
-        ip: 'local',
-        userAgent: navigator.userAgent,
-      };
-      const logs = JSON.parse(localStorage.getItem('cth_auth_logs') || '[]');
-      logs.push(loginLog);
-      localStorage.setItem('cth_auth_logs', JSON.stringify(logs));
-
-      const session = {
-        email: user.email,
-        loginAt: Date.now(),
-        expiresAt: Date.now() + 60 * 60 * 1000,
-      };
-      localStorage.setItem('cth_session', JSON.stringify(session));
-      window.location.href = '/dashboard';
-    } else {
-      setError('Adresse e-mail ou mot de passe incorrect.');
-      const logs = JSON.parse(localStorage.getItem('cth_auth_logs') || '[]');
-      logs.push({ email, action: 'login_failed', timestamp: new Date().toISOString(), ip: 'local' });
-      localStorage.setItem('cth_auth_logs', JSON.stringify(logs));
-    }
-    setLoading(false);
+    startTransition(async () => {
+      const result = await login(formData);
+      if (result?.error) {
+        setError(result.error);
+      }
+    });
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    await new Promise(r => setTimeout(r, 1500));
-    setForgotSent(true);
-    setLoading(false);
+    const formData = new FormData();
+    formData.set('email', forgotEmail);
+    startTransition(async () => {
+      const result = await forgotPassword(formData);
+      if (result?.success) {
+        setForgotSent(true);
+      } else if (result?.error) {
+        setError(result.error);
+      }
+    });
   };
 
   return (
@@ -97,7 +69,7 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="space-y-5">
+              <form action={handleLogin} className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">Adresse e-mail</label>
                   <div className="relative">
@@ -106,10 +78,9 @@ export default function LoginPage() {
                     </div>
                     <input
                       type="email"
+                      name="email"
                       className="w-full h-12 rounded-xl bg-gray-50 border border-gray-200 px-4 pl-11 text-sm text-[var(--text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
                       placeholder="exemple@cth-madagascar.mg"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
                       required
                       autoComplete="email"
                     />
@@ -124,10 +95,9 @@ export default function LoginPage() {
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
+                      name="password"
                       className="w-full h-12 rounded-xl bg-gray-50 border border-gray-200 px-4 pl-11 pr-11 text-sm text-[var(--text-primary)] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/30 focus:border-[var(--accent)] transition-all"
                       placeholder="Entrez votre mot de passe"
-                      value={password}
-                      onChange={e => setPassword(e.target.value)}
                       required
                       autoComplete="current-password"
                     />
@@ -143,10 +113,10 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isPending}
                   className="w-full h-12 rounded-xl bg-[var(--primary)] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)]/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[var(--primary)]/20"
                 >
-                  {loading ? (
+                  {isPending ? (
                     <>
                       <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Connexion en cours...
@@ -174,7 +144,7 @@ export default function LoginPage() {
                 <div className="flex items-start gap-2 text-[0.7rem] text-gray-400 leading-relaxed">
                   <ShieldCheck size={14} weight="duotone" className="flex-shrink-0 mt-0.5 text-emerald-400" />
                   <p>
-                    Connexion sécurisée • Déconnexion automatique après 1h d&apos;inactivité •
+                    Connexion sécurisée via Supabase Auth • Déconnexion automatique après 1h d&apos;inactivité •
                     Seul l&apos;administrateur peut créer des comptes •
                     Données protégées (RGPD)
                   </p>
@@ -203,8 +173,8 @@ export default function LoginPage() {
                         required
                       />
                     </div>
-                    <button type="submit" disabled={loading} className="w-full h-12 rounded-xl bg-[var(--primary)] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)]/90 transition-all disabled:opacity-50">
-                      {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
+                    <button type="submit" disabled={isPending} className="w-full h-12 rounded-xl bg-[var(--primary)] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)]/90 transition-all disabled:opacity-50">
+                      {isPending ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
                     </button>
                   </form>
                 </>

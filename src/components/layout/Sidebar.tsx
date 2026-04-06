@@ -3,11 +3,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   SquaresFour, UsersThree, Package, ClipboardText, Pill,
   ArrowsLeftRight, Barcode, FileText, BellRinging, GearSix,
-  CaretLeft, CaretRight
+  CaretLeft, CaretRight, SignOut
 } from '@phosphor-icons/react';
+import { logout } from '@/app/actions/auth';
+import { createBrowserSupabaseClient } from '@/lib/supabase';
 
 const navItems = [
   { nom: 'Tableau de bord', href: '/dashboard', icon: SquaresFour },
@@ -31,6 +34,21 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
+  const [alertCount, setAlertCount] = useState(0);
+  const [userEmail, setUserEmail] = useState('');
+
+  useEffect(() => {
+    const supabase = createBrowserSupabaseClient();
+
+    // Get current user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserEmail(user.email || '');
+    });
+
+    // Get unread alerts count
+    supabase.from('alertes').select('id', { count: 'exact', head: true }).eq('lue', false)
+      .then(({ count }) => setAlertCount(count || 0));
+  }, []);
 
   return (
     <aside
@@ -76,14 +94,14 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
                   )}
                   <Icon size={20} weight={isActive ? 'duotone' : 'regular'} className={`flex-shrink-0 ${isActive ? 'text-red-300' : 'group-hover:text-blue-200'}`} />
                   {!collapsed && <span>{item.nom}</span>}
-                  {item.nom === 'Alertes' && !collapsed && (
+                  {item.nom === 'Alertes' && alertCount > 0 && !collapsed && (
                     <span className="ml-auto bg-red-500 text-white text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center pulse-alert">
-                      4
+                      {alertCount}
                     </span>
                   )}
-                  {item.nom === 'Alertes' && collapsed && (
+                  {item.nom === 'Alertes' && alertCount > 0 && collapsed && (
                     <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[0.6rem] font-bold w-4 h-4 rounded-full flex items-center justify-center pulse-alert">
-                      4
+                      {alertCount}
                     </span>
                   )}
                 </Link>
@@ -92,6 +110,23 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
           })}
         </ul>
       </nav>
+
+      {/* User info + logout */}
+      <div className="border-t border-white/10 px-2 py-2">
+        {!collapsed && userEmail && (
+          <p className="text-blue-200/50 text-[0.65rem] truncate px-3 mb-1">{userEmail}</p>
+        )}
+        <form action={logout}>
+          <button
+            type="submit"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300/80 hover:bg-red-500/10 hover:text-red-300 transition-all w-full"
+            title={collapsed ? 'Se déconnecter' : undefined}
+          >
+            <SignOut size={20} weight="duotone" className="flex-shrink-0" />
+            {!collapsed && <span>Se déconnecter</span>}
+          </button>
+        </form>
+      </div>
 
       {/* Toggle */}
       <button

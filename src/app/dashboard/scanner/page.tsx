@@ -1,15 +1,26 @@
 'use client';
 
 import Navbar from '@/components/layout/Navbar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Barcode, Camera, Keyboard, Package, CheckCircle, Warning } from '@phosphor-icons/react';
-import { lots, medicaments } from '@/lib/demo-data';
+import { getLots } from '@/app/actions/stock';
+
+type LotWithMedicament = Awaited<ReturnType<typeof getLots>>[number];
 
 export default function ScannerPage() {
   const [mode, setMode] = useState<'douchette' | 'camera' | 'manuel'>('douchette');
   const [codeInput, setCodeInput] = useState('');
-  const [result, setResult] = useState<typeof lots[0] | null>(null);
+  const [result, setResult] = useState<LotWithMedicament | null>(null);
   const [error, setError] = useState('');
+  const [lots, setLots] = useState<LotWithMedicament[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getLots()
+      .then(data => setLots(data))
+      .catch(() => setLots([]))
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleSearch = (code: string) => {
     setError('');
@@ -23,8 +34,31 @@ export default function ScannerPage() {
     if (e.key === 'Enter' && codeInput.trim()) handleSearch(codeInput.trim());
   };
 
-  const resultMed = result ? medicaments.find(m => m.id === result.medicament_id) : null;
+  const resultMed = result?.medicament as LotWithMedicament['medicament'] | null;
   const joursExp = result ? Math.ceil((new Date(result.date_expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+
+  if (loading) {
+    return (
+      <>
+        <Navbar titre="Scanner de codes-barres" />
+        <main className="p-4 md:p-6">
+          <div className="max-w-3xl mx-auto space-y-6">
+            <div className="glass-card animate-pulse">
+              <div className="h-5 bg-gray-200 rounded w-1/3 mb-4" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="h-24 bg-gray-100 rounded-xl" />
+                <div className="h-24 bg-gray-100 rounded-xl" />
+                <div className="h-24 bg-gray-100 rounded-xl" />
+              </div>
+            </div>
+            <div className="glass-card animate-pulse">
+              <div className="h-40 bg-gray-100 rounded-xl" />
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>

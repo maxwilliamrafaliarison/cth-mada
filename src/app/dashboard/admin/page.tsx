@@ -2,7 +2,12 @@
 
 import Navbar from '@/components/layout/Navbar';
 import { GearSix, UsersThree, Hospital, Shield, Database, Envelope } from '@phosphor-icons/react';
-import { utilisateurs, centres } from '@/lib/demo-data';
+import { useState, useEffect } from 'react';
+import { getCentres } from '@/app/actions/stock';
+import { getUtilisateurs } from '@/app/actions/admin';
+
+type Utilisateur = Awaited<ReturnType<typeof getUtilisateurs>>[number];
+type Centre = Awaited<ReturnType<typeof getCentres>>[number];
 
 const roleLabels: Record<string, { label: string; class: string }> = {
   administrateur: { label: 'Administrateur', class: 'badge-danger' },
@@ -11,6 +16,42 @@ const roleLabels: Record<string, { label: string; class: string }> = {
 };
 
 export default function AdminPage() {
+  const [utilisateurs, setUtilisateurs] = useState<Utilisateur[]>([]);
+  const [centres, setCentres] = useState<Centre[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getUtilisateurs(), getCentres()])
+      .then(([usersData, centresData]) => {
+        setUtilisateurs(usersData);
+        setCentres(centresData);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar titre="Administration" />
+        <main className="p-4 md:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="glass-card animate-pulse">
+                <div className="h-5 bg-gray-200 rounded w-1/3 mb-4" />
+                <div className="space-y-3">
+                  <div className="h-14 bg-gray-100 rounded-xl" />
+                  <div className="h-14 bg-gray-100 rounded-xl" />
+                  <div className="h-14 bg-gray-100 rounded-xl" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <Navbar titre="Administration" />
@@ -27,8 +68,8 @@ export default function AdminPage() {
             </div>
             <div className="space-y-3">
               {utilisateurs.map(user => {
-                const role = roleLabels[user.role];
-                const centre = centres.find(c => c.id === user.centre_id);
+                const role = roleLabels[user.role] || { label: user.role, class: '' };
+                const centre = user.centre as { nom?: string; ville?: string } | null;
                 return (
                   <div key={user.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/30 hover:bg-white/50 transition-all duration-200 cursor-pointer">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] flex items-center justify-center">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   UsersThree, Heartbeat, Package, Warning, ClipboardText, Pill,
   ArrowsLeftRight, BellRinging, TrendUp, CalendarBlank, Skull
@@ -10,10 +11,34 @@ import RecentPrescriptions from './RecentPrescriptions';
 import AlertesBanner from './AlertesBanner';
 import PatientsBySeverity from './PatientsBySeverity';
 import StockParCentre from './StockParCentre';
-import { statistiques } from '@/lib/demo-data';
+import { getDashboardStats } from '@/app/actions/dashboard';
+import type { StatistiquesDashboard } from '@/types';
 
 export default function DashboardPage() {
-  const stats = statistiques;
+  const [stats, setStats] = useState<StatistiquesDashboard | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getDashboardStats()
+      .then(setStats)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || !stats) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="glass-card !p-4 animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+              <div className="h-8 bg-gray-200 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -119,7 +144,7 @@ export default function DashboardPage() {
         <StatCard
           titre="Sévères"
           valeur={stats.patients_severes}
-          sousTitre={`${((stats.patients_severes / stats.total_patients) * 100).toFixed(0)}% des patients`}
+          sousTitre={stats.total_patients > 0 ? `${((stats.patients_severes / stats.total_patients) * 100).toFixed(0)}% des patients` : undefined}
           icon={TrendUp}
           couleur="secondary"
           delayClass="delay-3"

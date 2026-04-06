@@ -2,13 +2,61 @@
 
 import Navbar from '@/components/layout/Navbar';
 import { FileText, DownloadSimple, PaperPlaneTilt, Printer } from '@phosphor-icons/react';
-import { centres, statistiques } from '@/lib/demo-data';
-import { useState } from 'react';
+import { getDashboardStats } from '@/app/actions/dashboard';
+import { getCentres } from '@/app/actions/stock';
+import { useState, useEffect } from 'react';
+
+type DashboardStats = Awaited<ReturnType<typeof getDashboardStats>>;
+type Centre = Awaited<ReturnType<typeof getCentres>>[number];
 
 export default function RapportsPage() {
   const [periode, setPeriode] = useState('mensuel');
   const [mois, setMois] = useState('2026-04');
   const [centreId, setCentreId] = useState('');
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [centres, setCentres] = useState<Centre[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getDashboardStats(), getCentres()])
+      .then(([statsData, centresData]) => {
+        setStats(statsData);
+        setCentres(centresData);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || !stats) {
+    return (
+      <>
+        <Navbar titre="Rapports" />
+        <main className="p-4 md:p-6">
+          <div className="glass-card mb-6 animate-pulse">
+            <div className="h-5 bg-gray-200 rounded w-1/3 mb-4" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="h-10 bg-gray-100 rounded" />
+              <div className="h-10 bg-gray-100 rounded" />
+              <div className="h-10 bg-gray-100 rounded" />
+              <div className="h-10 bg-gray-100 rounded" />
+            </div>
+          </div>
+          <div className="glass-card animate-pulse">
+            <div className="h-5 bg-gray-200 rounded w-1/4 mb-6" />
+            <div className="bg-white rounded-xl p-8 shadow-inner border border-gray-100 max-w-4xl mx-auto space-y-6">
+              <div className="h-6 bg-gray-100 rounded w-2/3 mx-auto" />
+              <div className="h-4 bg-gray-100 rounded w-1/2 mx-auto" />
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-50 rounded" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
@@ -48,11 +96,11 @@ export default function RapportsPage() {
             <div className="mb-6">
               <h3 className="text-sm font-bold text-[var(--primary)] uppercase tracking-wider mb-3 border-b border-gray-200 pb-1">1. Résumé des patients</h3>
               <table className="w-full text-sm"><tbody>
-                <tr className="border-b border-gray-50"><td className="py-1.5 text-[var(--text-secondary)]">Total patients enregistrés</td><td className="py-1.5 font-bold text-right">{statistiques.total_patients}</td></tr>
-                <tr className="border-b border-gray-50"><td className="py-1.5 text-[var(--text-secondary)]">Patients actifs</td><td className="py-1.5 font-bold text-right">{statistiques.patients_actifs}</td></tr>
-                <tr className="border-b border-gray-50"><td className="py-1.5 text-[var(--text-secondary)]">Hémophilie A (FVIII)</td><td className="py-1.5 font-bold text-right">{statistiques.patients_hemophilie_a}</td></tr>
-                <tr className="border-b border-gray-50"><td className="py-1.5 text-[var(--text-secondary)]">Hémophilie B (FIX)</td><td className="py-1.5 font-bold text-right">{statistiques.patients_hemophilie_b}</td></tr>
-                <tr><td className="py-1.5 text-[var(--text-secondary)]">Patients décédés</td><td className="py-1.5 font-bold text-right text-red-600">{statistiques.patients_decedes}</td></tr>
+                <tr className="border-b border-gray-50"><td className="py-1.5 text-[var(--text-secondary)]">Total patients enregistrés</td><td className="py-1.5 font-bold text-right">{stats.total_patients}</td></tr>
+                <tr className="border-b border-gray-50"><td className="py-1.5 text-[var(--text-secondary)]">Patients actifs</td><td className="py-1.5 font-bold text-right">{stats.patients_actifs}</td></tr>
+                <tr className="border-b border-gray-50"><td className="py-1.5 text-[var(--text-secondary)]">Hémophilie A (FVIII)</td><td className="py-1.5 font-bold text-right">{stats.patients_hemophilie_a}</td></tr>
+                <tr className="border-b border-gray-50"><td className="py-1.5 text-[var(--text-secondary)]">Hémophilie B (FIX)</td><td className="py-1.5 font-bold text-right">{stats.patients_hemophilie_b}</td></tr>
+                <tr><td className="py-1.5 text-[var(--text-secondary)]">Patients décédés</td><td className="py-1.5 font-bold text-right text-red-600">{stats.patients_decedes}</td></tr>
               </tbody></table>
             </div>
 
@@ -60,24 +108,24 @@ export default function RapportsPage() {
               <h3 className="text-sm font-bold text-[var(--primary)] uppercase tracking-wider mb-3 border-b border-gray-200 pb-1">2. État du stock par type de facteur</h3>
               <table className="w-full text-sm"><thead><tr className="bg-gray-50"><th className="py-2 px-3 text-left font-semibold text-xs">Type de facteur</th><th className="py-2 px-3 text-right font-semibold text-xs">Quantité en stock</th></tr></thead>
               <tbody>
-                {statistiques.stock_par_type_facteur.map(item => (<tr key={item.type} className="border-b border-gray-50"><td className="py-1.5 px-3">{item.type}</td><td className="py-1.5 px-3 text-right font-bold">{item.quantite.toLocaleString('fr-FR')} unités</td></tr>))}
-                <tr className="bg-gray-50 font-bold"><td className="py-2 px-3">Total</td><td className="py-2 px-3 text-right">{statistiques.stock_par_type_facteur.reduce((s, d) => s + d.quantite, 0).toLocaleString('fr-FR')} unités</td></tr>
+                {stats.stock_par_type_facteur.map(item => (<tr key={item.type} className="border-b border-gray-50"><td className="py-1.5 px-3">{item.type}</td><td className="py-1.5 px-3 text-right font-bold">{item.quantite.toLocaleString('fr-FR')} unités</td></tr>))}
+                <tr className="bg-gray-50 font-bold"><td className="py-2 px-3">Total</td><td className="py-2 px-3 text-right">{stats.stock_par_type_facteur.reduce((s, d) => s + d.quantite, 0).toLocaleString('fr-FR')} unités</td></tr>
               </tbody></table>
             </div>
 
             <div className="mb-6">
               <h3 className="text-sm font-bold text-[var(--primary)] uppercase tracking-wider mb-3 border-b border-gray-200 pb-1">3. Top 5 médicaments en stock</h3>
               <table className="w-full text-sm"><thead><tr className="bg-gray-50"><th className="py-2 px-3 text-left font-semibold text-xs">#</th><th className="py-2 px-3 text-left font-semibold text-xs">Médicament</th><th className="py-2 px-3 text-right font-semibold text-xs">Quantité restante</th></tr></thead>
-              <tbody>{statistiques.top_medicaments.map((item, i) => (<tr key={item.nom} className="border-b border-gray-50"><td className="py-1.5 px-3 font-bold text-[var(--primary)]">{i + 1}</td><td className="py-1.5 px-3">{item.nom}</td><td className="py-1.5 px-3 text-right font-bold">{item.quantite}</td></tr>))}</tbody></table>
+              <tbody>{stats.top_medicaments.map((item, i) => (<tr key={item.nom} className="border-b border-gray-50"><td className="py-1.5 px-3 font-bold text-[var(--primary)]">{i + 1}</td><td className="py-1.5 px-3">{item.nom}</td><td className="py-1.5 px-3 text-right font-bold">{item.quantite}</td></tr>))}</tbody></table>
             </div>
 
             <div className="mb-6">
               <h3 className="text-sm font-bold text-[var(--primary)] uppercase tracking-wider mb-3 border-b border-gray-200 pb-1">4. Activité du mois</h3>
               <table className="w-full text-sm"><tbody>
-                <tr className="border-b border-gray-50"><td className="py-1.5">Prescriptions émises</td><td className="py-1.5 font-bold text-right">{statistiques.prescriptions_mois}</td></tr>
-                <tr className="border-b border-gray-50"><td className="py-1.5">Dispensations effectuées</td><td className="py-1.5 font-bold text-right">{statistiques.dispensations_mois}</td></tr>
-                <tr className="border-b border-gray-50"><td className="py-1.5">Transferts inter-centres</td><td className="py-1.5 font-bold text-right">{statistiques.transferts_en_cours}</td></tr>
-                <tr><td className="py-1.5">Alertes générées</td><td className="py-1.5 font-bold text-right text-amber-600">{statistiques.alertes_non_lues}</td></tr>
+                <tr className="border-b border-gray-50"><td className="py-1.5">Prescriptions émises</td><td className="py-1.5 font-bold text-right">{stats.prescriptions_mois}</td></tr>
+                <tr className="border-b border-gray-50"><td className="py-1.5">Dispensations effectuées</td><td className="py-1.5 font-bold text-right">{stats.dispensations_mois}</td></tr>
+                <tr className="border-b border-gray-50"><td className="py-1.5">Transferts inter-centres</td><td className="py-1.5 font-bold text-right">{stats.transferts_en_cours}</td></tr>
+                <tr><td className="py-1.5">Alertes générées</td><td className="py-1.5 font-bold text-right text-amber-600">{stats.alertes_non_lues}</td></tr>
               </tbody></table>
             </div>
 

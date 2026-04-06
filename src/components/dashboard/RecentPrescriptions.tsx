@@ -1,7 +1,8 @@
 'use client';
 
 import { ClipboardText, Clock, CheckCircle, XCircle } from '@phosphor-icons/react';
-import { prescriptions, patients } from '@/lib/demo-data';
+import { useState, useEffect } from 'react';
+import { getPrescriptions } from '@/app/actions/prescriptions';
 
 const statutConfig: Record<string, { icon: typeof CheckCircle; class: string }> = {
   'En attente': { icon: Clock, class: 'badge-warning' },
@@ -10,10 +11,52 @@ const statutConfig: Record<string, { icon: typeof CheckCircle; class: string }> 
   'Partiellement dispensée': { icon: Clock, class: 'badge-info' },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Prescription = Record<string, any>;
+
 export default function RecentPrescriptions() {
-  const recentRx = [...prescriptions].sort((a, b) =>
-    new Date(b.date_prescription).getTime() - new Date(a.date_prescription).getTime()
-  ).slice(0, 5);
+  const [recentRx, setRecentRx] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getPrescriptions()
+      .then((data) => {
+        const sorted = [...data].sort(
+          (a, b) =>
+            new Date(b.date_prescription).getTime() - new Date(a.date_prescription).getTime()
+        );
+        setRecentRx(sorted.slice(0, 5));
+      })
+      .catch(() => {
+        setRecentRx([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="glass-card animate-fade-in opacity-0 delay-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <ClipboardText size={22} weight="duotone" className="text-[var(--info)]" />
+            <h3 className="font-bold text-[var(--text-primary)]">Prescriptions récentes</h3>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-white/30 animate-pulse">
+              <div className="w-9 h-9 rounded-lg bg-blue-50/60 flex-shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 w-32 bg-gray-200/60 rounded" />
+                <div className="h-3 w-48 bg-gray-200/60 rounded" />
+              </div>
+              <div className="h-5 w-16 bg-gray-200/60 rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card animate-fade-in opacity-0 delay-5">
@@ -29,7 +72,7 @@ export default function RecentPrescriptions() {
 
       <div className="space-y-3">
         {recentRx.map(rx => {
-          const patient = patients.find(p => p.id === rx.patient_id);
+          const patient = rx.patient;
           const config = statutConfig[rx.statut] || statutConfig['En attente'];
           const StatusIcon = config.icon;
 

@@ -1,11 +1,12 @@
 'use client';
 
 import Navbar from '@/components/layout/Navbar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MagnifyingGlass, Plus, Eye, PencilSimple, DownloadSimple, UsersThree, Heartbeat, ClipboardText } from '@phosphor-icons/react';
-import { patients, centres } from '@/lib/demo-data';
+import { getPatients } from '@/app/actions/patients';
+import { getCentres } from '@/app/actions/stock';
 import { ETHNIES_MADAGASCAR } from '@/types';
-import type { TypeHemophilie, SeveriteHemophilie, StatutPatient } from '@/types';
+import type { TypeHemophilie, SeveriteHemophilie, StatutPatient, Patient, Centre } from '@/types';
 
 function calculateAge(dateNaissance: string): string {
   const birth = new Date(dateNaissance);
@@ -28,13 +29,58 @@ const statutBadge: Record<string, string> = {
   'Décédé': 'badge-danger',
 };
 
+function SkeletonRow() {
+  return (
+    <tr className="animate-pulse">
+      {Array.from({ length: 11 }).map((_, i) => (
+        <td key={i}>
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+        </td>
+      ))}
+    </tr>
+  );
+}
+
+function SkeletonStatCard() {
+  return (
+    <div className="glass-card !p-4 flex items-center gap-3 animate-pulse">
+      <div className="w-10 h-10 rounded-xl bg-gray-200" />
+      <div className="space-y-2">
+        <div className="h-6 w-10 bg-gray-200 rounded" />
+        <div className="h-3 w-20 bg-gray-200 rounded" />
+      </div>
+    </div>
+  );
+}
+
 export default function PatientsPage() {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [centres, setCentres] = useState<Centre[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<TypeHemophilie | ''>('');
   const [filterSeverite, setFilterSeverite] = useState<SeveriteHemophilie | ''>('');
   const [filterStatut, setFilterStatut] = useState<StatutPatient | ''>('');
   const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [patientsData, centresData] = await Promise.all([
+          getPatients(),
+          getCentres(),
+        ]);
+        setPatients(patientsData as Patient[]);
+        setCentres(centresData as Centre[]);
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   const filtered = patients.filter(p => {
     const matchSearch = !search ||
@@ -53,42 +99,53 @@ export default function PatientsPage() {
       <main className="p-4 md:p-6">
         {/* En-tête stats rapides */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-          <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-              <UsersThree size={22} weight="duotone" className="text-[var(--primary)]" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{patients.length}</p>
-              <p className="text-xs text-[var(--text-muted)]">Total patients</p>
-            </div>
-          </div>
-          <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-            <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
-              <Heartbeat size={22} weight="duotone" className="text-[var(--secondary)]" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{patients.filter(p => p.type_hemophilie === 'HA').length}</p>
-              <p className="text-xs text-[var(--text-muted)]">Hémophilie A</p>
-            </div>
-          </div>
-          <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-              <Heartbeat size={22} weight="duotone" className="text-[var(--accent)]" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{patients.filter(p => p.type_hemophilie === 'HB').length}</p>
-              <p className="text-xs text-[var(--text-muted)]">Hémophilie B</p>
-            </div>
-          </div>
-          <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-              <UsersThree size={22} weight="duotone" className="text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-[var(--text-primary)]">{patients.filter(p => p.statut === 'Actif').length}</p>
-              <p className="text-xs text-[var(--text-muted)]">Actifs</p>
-            </div>
-          </div>
+          {loading ? (
+            <>
+              <SkeletonStatCard />
+              <SkeletonStatCard />
+              <SkeletonStatCard />
+              <SkeletonStatCard />
+            </>
+          ) : (
+            <>
+              <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <UsersThree size={22} weight="duotone" className="text-[var(--primary)]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[var(--text-primary)]">{patients.length}</p>
+                  <p className="text-xs text-[var(--text-muted)]">Total patients</p>
+                </div>
+              </div>
+              <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                  <Heartbeat size={22} weight="duotone" className="text-[var(--secondary)]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[var(--text-primary)]">{patients.filter(p => p.type_hemophilie === 'HA').length}</p>
+                  <p className="text-xs text-[var(--text-muted)]">Hémophilie A</p>
+                </div>
+              </div>
+              <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <Heartbeat size={22} weight="duotone" className="text-[var(--accent)]" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[var(--text-primary)]">{patients.filter(p => p.type_hemophilie === 'HB').length}</p>
+                  <p className="text-xs text-[var(--text-muted)]">Hémophilie B</p>
+                </div>
+              </div>
+              <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                  <UsersThree size={22} weight="duotone" className="text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-[var(--text-primary)]">{patients.filter(p => p.statut === 'Actif').length}</p>
+                  <p className="text-xs text-[var(--text-muted)]">Actifs</p>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Barre d'actions */}
@@ -149,9 +206,10 @@ export default function PatientsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(patient => {
-                    const centre = centres.find(c => c.id === patient.centre_id);
-                    return (
+                  {loading ? (
+                    Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
+                  ) : (
+                    filtered.map(patient => (
                       <tr
                         key={patient.id}
                         className={`cursor-pointer ${selectedPatient === patient.id ? '!bg-blue-50/50' : ''}`}
@@ -170,7 +228,7 @@ export default function PatientsPage() {
                         <td className="text-sm">{patient.poids ? `${patient.poids} kg` : '-'}</td>
                         <td className="text-sm font-medium">{patient.groupe_sanguin || '-'}</td>
                         <td><span className={`badge ${statutBadge[patient.statut]}`}>{patient.statut}</span></td>
-                        <td className="text-xs">{centre?.ville || '-'}</td>
+                        <td className="text-xs">{patient.centre?.nom || '-'}</td>
                         <td>
                           <div className="flex items-center gap-1">
                             <button className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600" title="Voir la fiche">
@@ -182,8 +240,8 @@ export default function PatientsPage() {
                           </div>
                         </td>
                       </tr>
-                    );
-                  })}
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

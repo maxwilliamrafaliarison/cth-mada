@@ -1,12 +1,41 @@
 'use client';
 
 import { Warning, Clock, X } from '@phosphor-icons/react';
-import { useState } from 'react';
-import { alertes } from '@/lib/demo-data';
+import { useState, useEffect } from 'react';
+import { getAlertes } from '@/app/actions/alertes';
 
 export default function AlertesBanner() {
   const [visible, setVisible] = useState(true);
-  const alertesUrgentes = alertes.filter(a => !a.lue && (a.niveau === 'urgent' || a.niveau === 'critique'));
+  const [alertesUrgentes, setAlertesUrgentes] = useState<Array<{ id: string; message: string; niveau: string; lue: boolean }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getAlertes({ lue: false })
+      .then((data) => {
+        const urgentes = data.filter(
+          (a: { niveau: string }) => a.niveau === 'urgent' || a.niveau === 'critique'
+        );
+        setAlertesUrgentes(urgentes);
+      })
+      .catch(() => {
+        setAlertesUrgentes([]);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="glass-card animate-pulse !bg-red-50/80 !border-red-200/50 !p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-red-100/60" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 w-32 bg-red-100/60 rounded" />
+            <div className="h-3 w-48 bg-red-100/60 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!visible || alertesUrgentes.length === 0) return null;
 

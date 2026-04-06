@@ -1,12 +1,76 @@
 'use client';
 
 import Navbar from '@/components/layout/Navbar';
+import { useState, useEffect } from 'react';
 import { Pill, UserCircle, Package, CheckCircle, Clock } from '@phosphor-icons/react';
-import { prescriptions, patients, medicaments, lots } from '@/lib/demo-data';
+import { getPrescriptions } from '@/app/actions/prescriptions';
+import { getLots } from '@/app/actions/stock';
 
 export default function DispensationPage() {
-  const enAttente = prescriptions.filter(rx => rx.statut === 'En attente');
-  const dispensees = prescriptions.filter(rx => rx.statut === 'Dispensée').slice(0, 5);
+  const [prescriptionsData, setPrescriptionsData] = useState<any[]>([]);
+  const [lotsData, setLotsData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [rxData, lotData] = await Promise.all([
+          getPrescriptions(),
+          getLots(),
+        ]);
+        setPrescriptionsData(rxData);
+        setLotsData(lotData);
+      } catch (err) {
+        console.error('Erreur chargement dispensation:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <>
+        <Navbar titre="Dispensation" />
+        <main className="p-4 md:p-6">
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-3 h-3 rounded-full bg-gray-200 animate-pulse" />
+              <div className="h-6 bg-gray-200 rounded w-64 animate-pulse" />
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="glass-card animate-pulse">
+                  <div className="flex items-start gap-4">
+                    <div className="w-14 h-14 rounded-xl bg-gray-200 flex-shrink-0 hidden sm:block" />
+                    <div className="flex-1 space-y-3">
+                      <div className="h-5 bg-gray-200 rounded w-1/3" />
+                      <div className="h-4 bg-gray-200 rounded w-2/3" />
+                      <div className="h-12 bg-gray-200 rounded w-full" />
+                    </div>
+                    <div className="w-28 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded" />
+                      <div className="h-10 bg-gray-200 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse" />
+            <div className="glass-card !p-0 overflow-hidden animate-pulse">
+              <div className="h-48 bg-gray-200" />
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
+
+  const enAttente = prescriptionsData.filter(rx => rx.statut === 'En attente');
+  const dispensees = prescriptionsData.filter(rx => rx.statut === 'Dispensée').slice(0, 5);
 
   return (
     <>
@@ -27,7 +91,7 @@ export default function DispensationPage() {
           ) : (
             <div className="space-y-4">
               {enAttente.map(rx => {
-                const patient = patients.find(p => p.id === rx.patient_id);
+                const patient = rx.patient;
                 return (
                   <div key={rx.id} className={`glass-card ${rx.urgence ? '!border-red-300 !bg-red-50/40' : ''} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300`}>
                     <div className="flex flex-col sm:flex-row items-start gap-4">
@@ -40,18 +104,18 @@ export default function DispensationPage() {
                           <span className={`badge ${patient?.type_hemophilie === 'HA' ? 'badge-secondary' : 'badge-accent'}`}>{patient?.numero_cth} - {patient?.type_hemophilie === 'HA' ? 'Hémophilie A' : 'Hémophilie B'}</span>
                           {rx.urgence && <span className="badge badge-danger pulse-alert">URGENT</span>}
                         </div>
-                        <p className="text-sm text-[var(--text-secondary)] mb-3">Prescrit par Dr FETY André • {rx.type_traitement} • {rx.type_saignement || ''}</p>
+                        <p className="text-sm text-[var(--text-secondary)] mb-3">Prescrit par {rx.medecin ? `Dr ${rx.medecin.nom} ${rx.medecin.prenom}` : 'Médecin inconnu'} • {rx.type_traitement} • {rx.type_saignement || ''}</p>
                         <div className="space-y-2">
-                          {rx.lignes.map(ligne => {
-                            const med = medicaments.find(m => m.id === ligne.medicament_id);
-                            const lotsDisponibles = lots.filter(l => l.medicament_id === ligne.medicament_id && l.quantite_restante > 0).sort((a, b) => new Date(a.date_expiration).getTime() - new Date(b.date_expiration).getTime());
+                          {rx.lignes?.map((ligne: any) => {
+                            const med = ligne.medicament;
+                            const lotsDisponibles = lotsData.filter(l => l.medicament_id === ligne.medicament_id && l.quantite_restante > 0).sort((a, b) => new Date(a.date_expiration).getTime() - new Date(b.date_expiration).getTime());
                             const lotSuggere = lotsDisponibles[0];
                             return (
                               <div key={ligne.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/50 border border-gray-100">
                                 <Pill size={22} weight="duotone" className="text-[var(--accent)] flex-shrink-0" />
                                 <div className="flex-1">
                                   <p className="font-semibold text-sm">{med?.nom_complet}</p>
-                                  <p className="text-xs text-[var(--text-muted)]">Quantité prescrite : <strong>{ligne.quantite_prescrite} {med?.unite}</strong>{ligne.posologie && ` • ${ligne.posologie}`}</p>
+                                  <p className="text-xs text-[var(--text-muted)]">Quantité prescrite : <strong>{ligne.quantite_prescrite}</strong>{ligne.posologie && ` • ${ligne.posologie}`}</p>
                                 </div>
                                 {lotSuggere && (
                                   <div className="text-right">
@@ -84,15 +148,15 @@ export default function DispensationPage() {
               <thead><tr><th>Date</th><th>Patient</th><th>Médicament</th><th>Quantité</th><th>N° Lot</th><th>Statut</th></tr></thead>
               <tbody>
                 {dispensees.map(rx => {
-                  const patient = patients.find(p => p.id === rx.patient_id);
-                  return rx.lignes.map(ligne => {
-                    const med = medicaments.find(m => m.id === ligne.medicament_id);
+                  const patient = rx.patient;
+                  return rx.lignes?.map((ligne: any) => {
+                    const med = ligne.medicament;
                     return (
                       <tr key={ligne.id}>
                         <td className="text-sm">{new Date(rx.date_prescription).toLocaleDateString('fr-FR')}</td>
                         <td className="font-semibold text-sm">{patient?.nom} {patient?.prenom}</td>
                         <td className="text-sm">{med?.nom_complet}</td>
-                        <td className="font-bold">{ligne.quantite_dispensee} {med?.unite}</td>
+                        <td className="font-bold">{ligne.quantite_dispensee}</td>
                         <td className="font-mono text-xs">-</td>
                         <td><span className="badge badge-success"><CheckCircle size={12} weight="duotone" />Dispensé</span></td>
                       </tr>
