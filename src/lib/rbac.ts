@@ -64,7 +64,7 @@ export function hasPermission(role: Role, resource: Resource, action: Action): b
 // Navigation items visibility per role
 const HIDDEN_ROUTES: Record<Role, string[]> = {
   administrateur: [],
-  medecin: ['/dashboard/admin', '/dashboard/journal'],
+  medecin: ['/dashboard/admin', '/dashboard/journal', '/dashboard/dispensation'],
   pharmacien: ['/dashboard/admin', '/dashboard/journal'],
 };
 

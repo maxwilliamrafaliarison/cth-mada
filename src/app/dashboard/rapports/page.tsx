@@ -69,8 +69,7 @@ export default function RapportsPage() {
             <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Période</label><input type="month" className="glass-input w-full" value={mois} onChange={e => setMois(e.target.value)} /></div>
             <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Centre</label><select className="glass-select w-full" value={centreId} onChange={e => setCentreId(e.target.value)}><option value="">Tous les centres</option>{centres.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}</select></div>
             <div className="flex items-end gap-2">
-              <button className="btn btn-primary flex-1"><FileText size={18} weight="duotone" />Générer PDF</button>
-              <button className="btn btn-accent" title="Envoyer par email"><PaperPlaneTilt size={18} weight="duotone" /></button>
+              <button className="btn btn-primary flex-1" onClick={() => window.print()}><FileText size={18} weight="duotone" />Générer PDF</button>
             </div>
           </div>
         </div>
@@ -79,9 +78,8 @@ export default function RapportsPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
             <h3 className="font-bold text-[var(--text-primary)]">Aperçu du rapport</h3>
             <div className="flex flex-wrap gap-2">
-              <button className="btn btn-glass btn-sm"><Printer size={14} weight="duotone" />Imprimer</button>
-              <button className="btn btn-primary btn-sm"><DownloadSimple size={14} weight="duotone" />Télécharger PDF</button>
-              <button className="btn btn-accent btn-sm"><PaperPlaneTilt size={14} weight="duotone" />Envoyer à Dr Fitahiana</button>
+              <button className="btn btn-glass btn-sm" onClick={() => window.print()}><Printer size={14} weight="duotone" />Imprimer</button>
+              <button className="btn btn-primary btn-sm" onClick={() => window.print()}><DownloadSimple size={14} weight="duotone" />Télécharger PDF</button>
             </div>
           </div>
 

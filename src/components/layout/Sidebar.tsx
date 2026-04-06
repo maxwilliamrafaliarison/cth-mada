@@ -21,7 +21,7 @@ const navItems = [
   { nom: 'Prescriptions', href: '/dashboard/prescriptions', icon: ClipboardText },
   { nom: 'Dispensation', href: '/dashboard/dispensation', icon: Pill },
   { nom: 'Transferts', href: '/dashboard/transferts', icon: ArrowsLeftRight },
-  { nom: 'Scanner', href: '/dashboard/scanner', icon: Barcode },
+  { nom: 'Recherche lot', href: '/dashboard/scanner', icon: Barcode },
   { nom: 'Rapports', href: '/dashboard/rapports', icon: FileText },
   { nom: 'Alertes', href: '/dashboard/alertes', icon: BellRinging },
   { nom: 'Journal Pharmacie', href: '/dashboard/journal', icon: BookOpen },
