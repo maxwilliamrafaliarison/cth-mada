@@ -1,6 +1,6 @@
 'use client';
 
-import { Package } from 'lucide-react';
+import { Package } from '@phosphor-icons/react';
 
 interface StockChartProps {
   data: { type: string; quantite: number }[];
@@ -14,7 +14,7 @@ export default function StockChart({ data }: StockChartProps) {
   return (
     <div className="glass-card animate-fade-in opacity-0 delay-5">
       <div className="flex items-center gap-2 mb-5">
-        <Package className="w-5 h-5 text-[var(--primary)]" />
+        <Package size={22} weight="duotone" className="text-[var(--primary)]" />
         <h3 className="font-bold text-[var(--text-primary)]">Stock par type de facteur</h3>
       </div>
       <div className="space-y-4">

@@ -1,25 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Users, Package, ClipboardList, Pill,
-  ArrowLeftRight, ScanBarcode, FileText, Bell, Settings,
-  ChevronLeft, ChevronRight
-} from 'lucide-react';
+  SquaresFour, UsersThree, Package, ClipboardText, Pill,
+  ArrowsLeftRight, Barcode, FileText, BellRinging, GearSix,
+  CaretLeft, CaretRight
+} from '@phosphor-icons/react';
 
 const navItems = [
-  { nom: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
-  { nom: 'Patients', href: '/dashboard/patients', icon: Users },
+  { nom: 'Tableau de bord', href: '/dashboard', icon: SquaresFour },
+  { nom: 'Patients', href: '/dashboard/patients', icon: UsersThree },
   { nom: 'Stock', href: '/dashboard/stock', icon: Package },
-  { nom: 'Prescriptions', href: '/dashboard/prescriptions', icon: ClipboardList },
+  { nom: 'Prescriptions', href: '/dashboard/prescriptions', icon: ClipboardText },
   { nom: 'Dispensation', href: '/dashboard/dispensation', icon: Pill },
-  { nom: 'Transferts', href: '/dashboard/transferts', icon: ArrowLeftRight },
-  { nom: 'Scanner', href: '/dashboard/scanner', icon: ScanBarcode },
+  { nom: 'Transferts', href: '/dashboard/transferts', icon: ArrowsLeftRight },
+  { nom: 'Scanner', href: '/dashboard/scanner', icon: Barcode },
   { nom: 'Rapports', href: '/dashboard/rapports', icon: FileText },
-  { nom: 'Alertes', href: '/dashboard/alertes', icon: Bell },
-  { nom: 'Administration', href: '/dashboard/admin', icon: Settings },
+  { nom: 'Alertes', href: '/dashboard/alertes', icon: BellRinging },
+  { nom: 'Administration', href: '/dashboard/admin', icon: GearSix },
 ];
 
 interface SidebarProps {
@@ -70,7 +70,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   {isActive && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 bg-red-400 rounded-r-full" />
                   )}
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-red-300' : 'group-hover:text-blue-200'}`} />
+                  <Icon size={20} weight={isActive ? 'duotone' : 'regular'} className={`flex-shrink-0 ${isActive ? 'text-red-300' : 'group-hover:text-blue-200'}`} />
                   {!collapsed && <span>{item.nom}</span>}
                   {item.nom === 'Alertes' && !collapsed && (
                     <span className="ml-auto bg-red-500 text-white text-[0.65rem] font-bold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center pulse-alert">
@@ -95,7 +95,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         className="flex items-center justify-center p-3 border-t border-white/10 text-blue-200/50 hover:text-white hover:bg-white/5 transition-colors"
         aria-label={collapsed ? 'Ouvrir le menu' : 'Réduire le menu'}
       >
-        {collapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+        {collapsed ? <CaretRight size={20} weight="bold" /> : <CaretLeft size={20} weight="bold" />}
       </button>
     </aside>
   );

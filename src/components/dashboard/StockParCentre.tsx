@@ -1,6 +1,6 @@
 'use client';
 
-import { Building2 } from 'lucide-react';
+import { Hospital } from '@phosphor-icons/react';
 
 interface Props {
   data: { centre: string; count: number }[];
@@ -12,7 +12,7 @@ export default function StockParCentre({ data }: Props) {
   return (
     <div className="glass-card animate-fade-in opacity-0 delay-6">
       <div className="flex items-center gap-2 mb-5">
-        <Building2 className="w-5 h-5 text-[var(--accent)]" />
+        <Hospital size={22} weight="duotone" className="text-[var(--accent)]" />
         <h3 className="font-bold text-[var(--text-primary)]">Patients par centre</h3>
       </div>
       <div className="space-y-3">

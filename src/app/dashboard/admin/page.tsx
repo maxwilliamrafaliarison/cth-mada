@@ -1,7 +1,7 @@
 'use client';
 
 import Navbar from '@/components/layout/Navbar';
-import { Settings, Users, Building2, Shield, Database, Mail } from 'lucide-react';
+import { GearSix, UsersThree, Hospital, Shield, Database, Envelope } from '@phosphor-icons/react';
 import { utilisateurs, centres } from '@/lib/demo-data';
 
 const roleLabels: Record<string, { label: string; class: string }> = {
@@ -20,7 +20,7 @@ export default function AdminPage() {
           <div className="glass-card">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-[var(--primary)]" />
+                <UsersThree size={22} weight="duotone" className="text-[var(--primary)]" />
                 <h3 className="font-bold text-[var(--text-primary)]">Utilisateurs</h3>
               </div>
               <button className="btn btn-primary btn-sm">+ Ajouter</button>
@@ -30,7 +30,7 @@ export default function AdminPage() {
                 const role = roleLabels[user.role];
                 const centre = centres.find(c => c.id === user.centre_id);
                 return (
-                  <div key={user.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/30">
+                  <div key={user.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/30 hover:bg-white/50 transition-all duration-200 cursor-pointer">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] flex items-center justify-center">
                       <span className="text-white text-sm font-bold">{user.prenom[0] || user.nom[0]}{user.nom[0]}</span>
                     </div>
@@ -48,12 +48,12 @@ export default function AdminPage() {
           {/* Centres */}
           <div className="glass-card">
             <div className="flex items-center gap-2 mb-4">
-              <Building2 className="w-5 h-5 text-[var(--accent)]" />
+              <Hospital size={22} weight="duotone" className="text-[var(--accent)]" />
               <h3 className="font-bold text-[var(--text-primary)]">Centres de traitement</h3>
             </div>
             <div className="space-y-2">
               {centres.map(centre => (
-                <div key={centre.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/30">
+                <div key={centre.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/30 hover:bg-white/50 transition-all duration-200 cursor-pointer">
                   <div className={`w-3 h-3 rounded-full ${centre.est_central ? 'bg-[var(--secondary)]' : 'bg-[var(--accent)]'}`} />
                   <div className="flex-1">
                     <p className="font-semibold text-sm">{centre.nom}</p>
@@ -68,29 +68,20 @@ export default function AdminPage() {
           {/* Configuration */}
           <div className="glass-card">
             <div className="flex items-center gap-2 mb-4">
-              <Settings className="w-5 h-5 text-[var(--text-secondary)]" />
+              <GearSix size={22} weight="duotone" className="text-[var(--text-secondary)]" />
               <h3 className="font-bold text-[var(--text-primary)]">Configuration</h3>
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/30">
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-[var(--text-muted)]" />
-                  <span className="text-sm">Seuil alerte expiration</span>
-                </div>
+                <div className="flex items-center gap-2"><Shield size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">Seuil alerte expiration</span></div>
                 <span className="font-bold text-sm">90 jours</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/30">
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-[var(--text-muted)]" />
-                  <span className="text-sm">Seuil stock faible</span>
-                </div>
+                <div className="flex items-center gap-2"><Database size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">Seuil stock faible</span></div>
                 <span className="font-bold text-sm">10 unités</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/30">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-[var(--text-muted)]" />
-                  <span className="text-sm">Email rapports</span>
-                </div>
+                <div className="flex items-center gap-2"><Envelope size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">Email rapports</span></div>
                 <span className="text-sm text-[var(--text-secondary)]">fitahiana@cth-madagascar.mg</span>
               </div>
             </div>
@@ -99,7 +90,7 @@ export default function AdminPage() {
           {/* Base de données */}
           <div className="glass-card">
             <div className="flex items-center gap-2 mb-4">
-              <Database className="w-5 h-5 text-emerald-600" />
+              <Database size={22} weight="duotone" className="text-emerald-600" />
               <h3 className="font-bold text-[var(--text-primary)]">Base de données</h3>
             </div>
             <div className="space-y-3">
@@ -112,7 +103,7 @@ export default function AdminPage() {
                 <span className="text-sm text-[var(--text-muted)]">{new Date().toLocaleString('fr-FR')}</span>
               </div>
               <button className="btn btn-glass btn-sm w-full">
-                <Database className="w-3.5 h-3.5" />
+                <Database size={14} weight="duotone" />
                 Importer données Excel existantes
               </button>
             </div>

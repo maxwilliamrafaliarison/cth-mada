@@ -1,6 +1,6 @@
 'use client';
 
-import { HeartPulse } from 'lucide-react';
+import { Heartbeat } from '@phosphor-icons/react';
 
 interface Props {
   data: { severite: string; count: number }[];
@@ -19,7 +19,7 @@ export default function PatientsBySeverity({ data }: Props) {
   return (
     <div className="glass-card animate-fade-in opacity-0 delay-6">
       <div className="flex items-center gap-2 mb-5">
-        <HeartPulse className="w-5 h-5 text-[var(--secondary)]" />
+        <Heartbeat size={22} weight="duotone" className="text-[var(--secondary)]" />
         <h3 className="font-bold text-[var(--text-primary)]">Répartition par sévérité</h3>
       </div>
 

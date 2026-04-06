@@ -1,9 +1,9 @@
 'use client';
 
 import {
-  Users, HeartPulse, Package, AlertTriangle, ClipboardList, Pill,
-  ArrowLeftRight, Bell, Activity, TrendingUp, Calendar
-} from 'lucide-react';
+  UsersThree, Heartbeat, Package, Warning, ClipboardText, Pill,
+  ArrowsLeftRight, BellRinging, TrendUp, CalendarBlank, Skull
+} from '@phosphor-icons/react';
 import StatCard from '@/components/ui/StatCard';
 import StockChart from './StockChart';
 import RecentPrescriptions from './RecentPrescriptions';
@@ -26,32 +26,36 @@ export default function DashboardPage() {
           titre="Patients enregistrés"
           valeur={stats.total_patients}
           sousTitre={`${stats.patients_actifs} actifs`}
-          icon={Users}
+          icon={UsersThree}
           couleur="primary"
           delayClass="delay-1"
+          href="/dashboard/patients"
         />
         <StatCard
           titre="Hémophilie A"
           valeur={stats.patients_hemophilie_a}
           sousTitre="Déficit en facteur VIII"
-          icon={HeartPulse}
+          icon={Heartbeat}
           couleur="secondary"
           delayClass="delay-2"
+          href="/dashboard/patients"
         />
         <StatCard
           titre="Hémophilie B"
           valeur={stats.patients_hemophilie_b}
           sousTitre="Déficit en facteur IX"
-          icon={HeartPulse}
+          icon={Heartbeat}
           couleur="accent"
           delayClass="delay-3"
+          href="/dashboard/patients"
         />
         <StatCard
           titre="Patients décédés"
           valeur={stats.patients_decedes}
-          icon={Activity}
+          icon={Skull}
           couleur="danger"
           delayClass="delay-4"
+          href="/dashboard/patients"
         />
       </div>
 
@@ -64,22 +68,25 @@ export default function DashboardPage() {
           icon={Package}
           couleur="success"
           delayClass="delay-1"
+          href="/dashboard/stock"
         />
         <StatCard
           titre="Alertes stock"
           valeur={stats.stock_faible_count}
           sousTitre="Produits en stock faible"
-          icon={AlertTriangle}
+          icon={Warning}
           couleur="warning"
           delayClass="delay-2"
+          href="/dashboard/alertes"
         />
         <StatCard
           titre="Prescriptions ce mois"
           valeur={stats.prescriptions_mois}
           sousTitre={`${stats.prescriptions_en_attente} en attente`}
-          icon={ClipboardList}
+          icon={ClipboardText}
           couleur="info"
           delayClass="delay-3"
+          href="/dashboard/prescriptions"
         />
         <StatCard
           titre="Dispensations ce mois"
@@ -87,6 +94,7 @@ export default function DashboardPage() {
           icon={Pill}
           couleur="primary"
           delayClass="delay-4"
+          href="/dashboard/dispensation"
         />
       </div>
 
@@ -95,31 +103,35 @@ export default function DashboardPage() {
         <StatCard
           titre="Transferts en cours"
           valeur={stats.transferts_en_cours}
-          icon={ArrowLeftRight}
+          icon={ArrowsLeftRight}
           couleur="accent"
           delayClass="delay-1"
+          href="/dashboard/transferts"
         />
         <StatCard
           titre="Alertes non lues"
           valeur={stats.alertes_non_lues}
-          icon={Bell}
+          icon={BellRinging}
           couleur="danger"
           delayClass="delay-2"
+          href="/dashboard/alertes"
         />
         <StatCard
           titre="Sévères"
           valeur={stats.patients_severes}
           sousTitre={`${((stats.patients_severes / stats.total_patients) * 100).toFixed(0)}% des patients`}
-          icon={TrendingUp}
+          icon={TrendUp}
           couleur="secondary"
           delayClass="delay-3"
+          href="/dashboard/patients"
         />
         <StatCard
           titre="Mois en cours"
           valeur={new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-          icon={Calendar}
+          icon={CalendarBlank}
           couleur="info"
           delayClass="delay-4"
+          href="/dashboard/rapports"
         />
       </div>
 

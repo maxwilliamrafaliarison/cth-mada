@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 export default function DashboardLayout({
   children,
@@ -11,11 +12,13 @@ export default function DashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? 'ml-[72px]' : 'ml-[260px]'}`}>
-        {children}
+    <AuthGuard>
+      <div className="min-h-screen">
+        <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <div className={`transition-all duration-300 ${sidebarCollapsed ? 'ml-[72px]' : 'ml-[260px]'}`}>
+          {children}
+        </div>
       </div>
-    </div>
+    </AuthGuard>
   );
 }
