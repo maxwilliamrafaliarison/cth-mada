@@ -4,9 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "CTH Madagascar - Centre de Traitement de l'Hémophilie",
   description: "Tableau de bord de gestion du Centre de Traitement de l'Hémophilie de Madagascar. Suivi des patients, stock de médicaments, prescriptions et rapports.",
-  icons: {
-    icon: '/favicon.ico',
-  },
 };
 
 export default function RootLayout({
