@@ -4,6 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { MagnifyingGlass, Plus, Eye, PencilSimple, Trash, DownloadSimple, UsersThree, Heartbeat, ClipboardText, Warning, CheckCircle } from '@phosphor-icons/react';
+import PatientAvatar from '@/components/ui/PatientAvatar';
 import { getPatients, createPatient, updatePatient, deletePatient } from '@/app/actions/patients';
 import { getCentres } from '@/app/actions/stock';
 import { ETHNIES_MADAGASCAR } from '@/types';
@@ -36,7 +37,7 @@ const statutBadge: Record<string, string> = {
 function SkeletonRow() {
   return (
     <tr className="animate-pulse">
-      {Array.from({ length: 11 }).map((_, i) => (
+      {Array.from({ length: 12 }).map((_, i) => (
         <td key={i}>
           <div className="h-4 bg-gray-200 rounded w-3/4" />
         </td>
@@ -368,6 +369,7 @@ export default function PatientsPage() {
               <table className="glass-table">
                 <thead>
                   <tr>
+                    <th></th>
                     <th>N CTH</th>
                     <th>N WBDR</th>
                     <th>Nom et Prenom</th>
@@ -391,6 +393,9 @@ export default function PatientsPage() {
                         className={`cursor-pointer ${selectedPatient === patient.id ? '!bg-blue-50/50' : ''}`}
                         onClick={() => setSelectedPatient(patient.id === selectedPatient ? null : patient.id)}
                       >
+                        <td>
+                          <PatientAvatar sexe={patient.sexe} dateNaissance={patient.date_naissance} size={20} />
+                        </td>
                         <td className="font-bold text-[var(--primary)]">{patient.numero_cth}</td>
                         <td className="font-mono text-xs">{patient.numero_wbdr}</td>
                         <td className="font-semibold">{patient.nom} {patient.prenom}</td>
@@ -459,8 +464,8 @@ export default function PatientsPage() {
 
               {/* En-tete patient */}
               <div className="text-center mb-5 pb-5 border-b border-gray-100">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] flex items-center justify-center mx-auto mb-3">
-                  <span className="text-white text-xl font-bold">{selected.prenom[0]}{selected.nom[0]}</span>
+                <div className="mx-auto mb-3">
+                  <PatientAvatar sexe={selected.sexe} dateNaissance={selected.date_naissance} size={35} />
                 </div>
                 <h4 className="font-bold text-lg text-[var(--text-primary)]">{selected.nom} {selected.prenom}</h4>
                 <div className="flex items-center justify-center gap-2 mt-2">
