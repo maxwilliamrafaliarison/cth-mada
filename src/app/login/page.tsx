@@ -57,11 +57,6 @@ export default function LoginPage() {
         <div className="rounded-2xl bg-white/80 backdrop-blur-xl border border-white/60 shadow-2xl shadow-black/5 p-7">
           {!showForgot ? (
             <>
-              <div className="flex items-center gap-2.5 mb-5">
-                <ShieldCheck size={22} weight="duotone" className="text-[var(--primary)]" />
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">Connexion sécurisée</h2>
-              </div>
-
               {error && (
                 <div className="flex items-center gap-2.5 p-3 rounded-xl bg-red-50 border border-red-200/50 mb-5 animate-fade-in">
                   <Warning size={18} weight="duotone" className="text-red-500 flex-shrink-0" />
@@ -141,13 +136,9 @@ export default function LoginPage() {
 
               {/* Info sécurité */}
               <div className="mt-5 pt-4 border-t border-gray-100">
-                <div className="flex items-start gap-2 text-[0.7rem] text-gray-400 leading-relaxed">
-                  <ShieldCheck size={14} weight="duotone" className="flex-shrink-0 mt-0.5 text-emerald-400" />
-                  <p>
-                    Connexion sécurisée via Supabase Auth • Déconnexion automatique après 1h d&apos;inactivité •
-                    Seul l&apos;administrateur peut créer des comptes •
-                    Données protégées (RGPD)
-                  </p>
+                <div className="flex items-center justify-center gap-1.5 text-[0.7rem] text-gray-400">
+                  <ShieldCheck size={14} weight="duotone" className="text-emerald-400" />
+                  <p>Connexion sécurisée</p>
                 </div>
               </div>
             </>
@@ -198,7 +189,7 @@ export default function LoginPage() {
 
         {/* Pied de page */}
         <p className="text-center text-[0.7rem] text-gray-400 mt-5">
-          © {new Date().getFullYear()} CTH Madagascar • Application à usage médical confidentiel
+          © 2026 CTH Madagascar
         </p>
       </div>
     </div>
