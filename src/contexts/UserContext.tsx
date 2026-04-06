@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { createBrowserSupabaseClient } from '@/lib/supabase';
+import { getCentres } from '@/app/actions/stock';
 
 export interface UserProfile {
   id: string;
@@ -63,14 +64,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
         if (profileData) {
           let centresList: { id: string; nom: string; code: string; ville: string; est_principal: boolean }[] = [];
 
-          // Admins can navigate all centres
+          // Admins can navigate all centres — use server action to bypass RLS
           if (profileData.role === 'administrateur') {
-            const { data: allCentres } = await supabase
-              .from('centres')
-              .select('*')
-              .order('nom', { ascending: true });
+            const allCentres = await getCentres();
 
-            centresList = (allCentres || []).map(c => ({
+            centresList = (allCentres || []).map((c: Record<string, string>) => ({
               id: c.id,
               nom: c.nom,
               code: c.code,
