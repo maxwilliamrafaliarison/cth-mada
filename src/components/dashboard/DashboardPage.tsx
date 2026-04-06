@@ -13,6 +13,7 @@ import RecentPrescriptions from './RecentPrescriptions';
 import AlertesBanner from './AlertesBanner';
 import PatientsBySeverity from './PatientsBySeverity';
 import StockParCentre from './StockParCentre';
+import ConsommationMensuelle from './ConsommationMensuelle';
 import { getDashboardStats } from '@/app/actions/dashboard';
 import { createBrowserSupabaseClient } from '@/lib/supabase';
 import type { StatistiquesDashboard } from '@/types';
@@ -359,11 +360,15 @@ export default function DashboardPage() {
       {/* Graphiques et details */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <StockChart data={stats.stock_par_type_facteur} />
-        <PatientsBySeverity data={stats.repartition_severite} />
+        <ConsommationMensuelle data={stats.consommation_mensuelle} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+        <PatientsBySeverity data={stats.repartition_severite} />
         <RecentPrescriptions />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <StockParCentre data={stats.patients_par_centre} />
       </div>
     </div>

@@ -3,10 +3,11 @@
 import Navbar from '@/components/layout/Navbar';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { MagnifyingGlass, Plus, Eye, PencilSimple, Trash, DownloadSimple, UsersThree, Heartbeat, ClipboardText, Warning, CheckCircle } from '@phosphor-icons/react';
+import { MagnifyingGlass, Plus, Eye, PencilSimple, Trash, DownloadSimple, UsersThree, Heartbeat, ClipboardText, Warning, CheckCircle, Pill, Clock } from '@phosphor-icons/react';
 import PatientAvatar from '@/components/ui/PatientAvatar';
 import { getPatients, createPatient, updatePatient, deletePatient } from '@/app/actions/patients';
 import { getCentres } from '@/app/actions/stock';
+import { getPatientDispensationHistory } from '@/app/actions/prescriptions';
 import { ETHNIES_MADAGASCAR } from '@/types';
 import type { TypeHemophilie, SeveriteHemophilie, StatutPatient, Patient, Centre } from '@/types';
 import { useUser } from '@/contexts/UserContext';
@@ -109,6 +110,12 @@ export default function PatientsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<Patient | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Detail panel tab
+  const [detailTab, setDetailTab] = useState<'info' | 'dispensations'>('info');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [dispensations, setDispensations] = useState<any[]>([]);
+  const [dispensationsLoading, setDispensationsLoading] = useState(false);
+
   // Toast
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -135,6 +142,23 @@ export default function PatientsPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Reset tab when patient selection changes
+  useEffect(() => {
+    setDetailTab('info');
+    setDispensations([]);
+  }, [selectedPatient]);
+
+  // Fetch dispensation history when tab is selected
+  useEffect(() => {
+    if (detailTab === 'dispensations' && selectedPatient) {
+      setDispensationsLoading(true);
+      getPatientDispensationHistory(selectedPatient)
+        .then(data => setDispensations(data))
+        .catch(err => console.error('Erreur chargement dispensations:', err))
+        .finally(() => setDispensationsLoading(false));
+    }
+  }, [detailTab, selectedPatient]);
 
   const filtered = patients.filter(p => {
     const matchSearch = !search ||
@@ -477,28 +501,148 @@ export default function PatientsPage() {
                 </div>
               </div>
 
-              {/* Details */}
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">N CTH</span><span className="font-semibold">{selected.numero_cth}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">N WBDR</span><span className="font-mono">{selected.numero_wbdr}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Date de naissance</span><span>{new Date(selected.date_naissance).toLocaleDateString('fr-FR')}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Age</span><span className="font-semibold">{calculateAge(selected.date_naissance)}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Poids</span><span>{selected.poids ? `${selected.poids} kg` : 'Non renseigne'}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Groupe sanguin</span><span className="font-bold text-[var(--secondary)]">{selected.groupe_sanguin || 'Non renseigne'}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Taux de facteur</span><span className="font-semibold">{selected.taux_facteur || 'Non renseigne'}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Inhibiteurs</span><span className={selected.presence_inhibiteurs ? 'text-red-600 font-bold' : ''}>{selected.presence_inhibiteurs ? 'Oui' : 'Non'}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--text-muted)]">Traitement a domicile</span><span>{selected.traitement_domicile ? 'Oui' : 'Non'}</span></div>
-                {selected.date_diagnostic && <div className="flex justify-between"><span className="text-[var(--text-muted)]">Date de diagnostic</span><span>{new Date(selected.date_diagnostic).toLocaleDateString('fr-FR')}</span></div>}
-                {selected.circonstances_decouverte && <div><span className="text-[var(--text-muted)] block mb-1">Circonstances de decouverte</span><span className="text-xs">{selected.circonstances_decouverte}</span></div>}
-                {selected.adresse && <div><span className="text-[var(--text-muted)] block mb-1">Adresse</span><span className="text-xs">{selected.adresse}</span></div>}
-                {selected.telephone && <div className="flex justify-between"><span className="text-[var(--text-muted)]">Telephone</span><span className="text-xs">{selected.telephone}</span></div>}
-                {selected.observations && (
-                  <div className="mt-3 p-3 rounded-xl bg-amber-50/50 border border-amber-200/50">
-                    <span className="text-xs font-semibold text-amber-700">Observations</span>
-                    <p className="text-xs text-amber-800 mt-1">{selected.observations}</p>
-                  </div>
-                )}
+              {/* Tab toggle */}
+              <div className="flex gap-1 p-1 rounded-xl bg-gray-100/80 mb-4">
+                <button
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all duration-200 ${detailTab === 'info' ? 'bg-white shadow-sm text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
+                  onClick={() => setDetailTab('info')}
+                >
+                  <ClipboardText size={14} weight="duotone" />
+                  Informations
+                </button>
+                <button
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold transition-all duration-200 ${detailTab === 'dispensations' ? 'bg-white shadow-sm text-[var(--primary)]' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}
+                  onClick={() => setDetailTab('dispensations')}
+                >
+                  <Pill size={14} weight="duotone" />
+                  Historique dispensations
+                </button>
               </div>
+
+              {/* Tab content: Informations */}
+              {detailTab === 'info' && (
+                <>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">N CTH</span><span className="font-semibold">{selected.numero_cth}</span></div>
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">N WBDR</span><span className="font-mono">{selected.numero_wbdr}</span></div>
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">Date de naissance</span><span>{new Date(selected.date_naissance).toLocaleDateString('fr-FR')}</span></div>
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">Age</span><span className="font-semibold">{calculateAge(selected.date_naissance)}</span></div>
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">Poids</span><span>{selected.poids ? `${selected.poids} kg` : 'Non renseigne'}</span></div>
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">Groupe sanguin</span><span className="font-bold text-[var(--secondary)]">{selected.groupe_sanguin || 'Non renseigne'}</span></div>
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">Taux de facteur</span><span className="font-semibold">{selected.taux_facteur || 'Non renseigne'}</span></div>
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">Inhibiteurs</span><span className={selected.presence_inhibiteurs ? 'text-red-600 font-bold' : ''}>{selected.presence_inhibiteurs ? 'Oui' : 'Non'}</span></div>
+                    <div className="flex justify-between"><span className="text-[var(--text-muted)]">Traitement a domicile</span><span>{selected.traitement_domicile ? 'Oui' : 'Non'}</span></div>
+                    {selected.date_diagnostic && <div className="flex justify-between"><span className="text-[var(--text-muted)]">Date de diagnostic</span><span>{new Date(selected.date_diagnostic).toLocaleDateString('fr-FR')}</span></div>}
+                    {selected.circonstances_decouverte && <div><span className="text-[var(--text-muted)] block mb-1">Circonstances de decouverte</span><span className="text-xs">{selected.circonstances_decouverte}</span></div>}
+                    {selected.adresse && <div><span className="text-[var(--text-muted)] block mb-1">Adresse</span><span className="text-xs">{selected.adresse}</span></div>}
+                    {selected.telephone && <div className="flex justify-between"><span className="text-[var(--text-muted)]">Telephone</span><span className="text-xs">{selected.telephone}</span></div>}
+                    {selected.observations && (
+                      <div className="mt-3 p-3 rounded-xl bg-amber-50/50 border border-amber-200/50">
+                        <span className="text-xs font-semibold text-amber-700">Observations</span>
+                        <p className="text-xs text-amber-800 mt-1">{selected.observations}</p>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Tab content: Historique dispensations */}
+              {detailTab === 'dispensations' && (
+                <div className="space-y-4">
+                  {/* Summary stats */}
+                  {!dispensationsLoading && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="glass-card !p-3 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <Pill size={16} weight="duotone" className="text-[var(--primary)]" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-[var(--text-primary)]">{dispensations.length}</p>
+                          <p className="text-[10px] text-[var(--text-muted)]">Dispensations</p>
+                        </div>
+                      </div>
+                      <div className="glass-card !p-3 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                          <Clock size={16} weight="duotone" className="text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[var(--text-primary)]">
+                            {dispensations.length > 0
+                              ? new Date(dispensations[0].created_at).toLocaleDateString('fr-FR')
+                              : '-'}
+                          </p>
+                          <p className="text-[10px] text-[var(--text-muted)]">Derniere disp.</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Loading skeleton */}
+                  {dispensationsLoading && (
+                    <div className="space-y-3 animate-pulse">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="h-16 bg-gray-100 rounded-xl" />
+                        <div className="h-16 bg-gray-100 rounded-xl" />
+                      </div>
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="h-24 bg-gray-100 rounded-xl" />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Empty state */}
+                  {!dispensationsLoading && dispensations.length === 0 && (
+                    <div className="text-center py-8">
+                      <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                        <Pill size={24} weight="duotone" className="text-[var(--text-muted)]" />
+                      </div>
+                      <p className="text-sm text-[var(--text-muted)]">Aucune dispensation pour ce patient</p>
+                    </div>
+                  )}
+
+                  {/* Dispensation list */}
+                  {!dispensationsLoading && dispensations.length > 0 && (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                      {dispensations.map((disp: { id: string; numero: string; created_at: string; statut: string; medecin: { nom: string; prenom: string } | null; lignes: { quantite_prescrite: number; quantite_dispensee: number; medicament: { nom_complet: string; type_facteur: string | null } | null }[] }) => (
+                        <div key={disp.id} className="glass-card !p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-[var(--primary)]">{disp.numero}</span>
+                            <span className="text-[10px] text-[var(--text-muted)]">
+                              {new Date(disp.created_at).toLocaleDateString('fr-FR')}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <ClipboardText size={12} weight="duotone" className="text-[var(--text-muted)]" />
+                            <span className="text-xs text-[var(--text-secondary)]">
+                              Dr {disp.medecin?.prenom} {disp.medecin?.nom}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className={`badge text-[10px] ${disp.statut === 'Dispensée' ? 'badge-success' : 'badge-warning'}`}>
+                              {disp.statut}
+                            </span>
+                          </div>
+                          {disp.lignes && disp.lignes.length > 0 && (
+                            <div className="mt-1 pt-2 border-t border-gray-100 space-y-1">
+                              {disp.lignes.map((ligne: { quantite_prescrite: number; quantite_dispensee: number; medicament: { nom_complet: string; type_facteur: string | null } | null }, idx: number) => (
+                                <div key={idx} className="flex items-center justify-between text-[11px]">
+                                  <span className="text-[var(--text-secondary)] flex items-center gap-1">
+                                    <Pill size={10} weight="duotone" className="text-[var(--primary)]" />
+                                    {ligne.medicament?.nom_complet || 'Medicament inconnu'}
+                                  </span>
+                                  <span className="font-semibold text-[var(--text-primary)]">
+                                    {ligne.quantite_dispensee ?? ligne.quantite_prescrite} u.
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Actions */}
               <div className="mt-5 pt-4 border-t border-gray-100 flex gap-2">
@@ -511,9 +655,12 @@ export default function PatientsPage() {
                     Prescrire
                   </button>
                 )}
-                <button className="btn btn-glass btn-sm flex-1">
-                  <Eye size={14} weight="duotone" />
-                  Historique
+                <button
+                  className={`btn btn-sm flex-1 ${detailTab === 'dispensations' ? 'btn-primary' : 'btn-glass'}`}
+                  onClick={() => setDetailTab(detailTab === 'dispensations' ? 'info' : 'dispensations')}
+                >
+                  <Pill size={14} weight="duotone" />
+                  Dispensations
                 </button>
                 {canUpdate && (
                   <button

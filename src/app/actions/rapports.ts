@@ -2,26 +2,23 @@
 
 import { createAdminClient, requireAuth } from '@/lib/supabase-server';
 
-export async function getDashboardStats() {
+export async function getReportData() {
   await requireAuth();
   const supabase = createAdminClient();
 
-  // Execute all queries in parallel
   const [
     patientsResult,
     lotsResult,
     prescriptionsResult,
     transfertsResult,
     alertesResult,
-    medicamentsResult,
     centresResult,
   ] = await Promise.all([
     supabase.from('patients').select('id, type_hemophilie, severite, statut, centre_id'),
     supabase.from('lots').select('id, medicament_id, centre_id, quantite_restante, date_expiration, actif, medicament:medicaments(nom_complet, type_facteur)'),
-    supabase.from('prescriptions').select('id, statut, created_at, updated_at'),
+    supabase.from('prescriptions').select('id, statut, created_at, updated_at, centre_id'),
     supabase.from('transferts').select('id, statut'),
-    supabase.from('alertes').select('id, lue'),
-    supabase.from('medicaments').select('id, nom_complet, type_facteur'),
+    supabase.from('alertes').select('id, type, niveau, titre, message, lue, created_at').order('created_at', { ascending: false }).limit(50),
     supabase.from('centres').select('id, nom, code'),
   ]);
 
@@ -33,11 +30,11 @@ export async function getDashboardStats() {
   const centres = centresResult.data || [];
 
   const now = new Date();
-  const thirtyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+  const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
-  // Patients stats
+  // --- Patients stats ---
   const patientsActifs = patients.filter(p => p.statut === 'Actif');
   const patientsHA = patients.filter(p => p.type_hemophilie === 'HA');
   const patientsHB = patients.filter(p => p.type_hemophilie === 'HB');
@@ -46,31 +43,16 @@ export async function getDashboardStats() {
   const patientsMineurs = patients.filter(p => p.severite === 'Mineure');
   const patientsDecedes = patients.filter(p => p.statut === 'Décédé');
 
-  // Lots stats
+  // --- Lots stats ---
   const lotsActifs = lots.filter(l => l.actif);
   const lotsProchesExpiration = lotsActifs.filter(l => {
     const expDate = new Date(l.date_expiration);
-    return expDate <= thirtyDaysFromNow && expDate > now;
+    return expDate <= ninetyDaysFromNow && expDate > now;
   });
   const lotsExpires = lotsActifs.filter(l => new Date(l.date_expiration) <= now);
   const stockFaible = lotsActifs.filter(l => l.quantite_restante <= 20);
 
-  // Prescriptions stats
-  const prescriptionsEnAttente = prescriptions.filter(p => p.statut === 'En attente');
-  const prescriptionsMois = prescriptions.filter(p => {
-    const d = new Date(p.created_at);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-  });
-
-  // Transferts stats
-  const transfertsEnCours = transferts.filter(t =>
-    ['Demandé', 'Approuvé', 'En transit'].includes(t.statut)
-  );
-
-  // Alertes stats
-  const alertesNonLues = alertes.filter(a => !a.lue);
-
-  // Stock par type de facteur
+  // --- Stock par type de facteur ---
   const stockParType: Record<string, number> = {};
   lotsActifs.forEach(l => {
     const med = l.medicament as { type_facteur?: string } | null;
@@ -78,38 +60,71 @@ export async function getDashboardStats() {
     stockParType[type] = (stockParType[type] || 0) + l.quantite_restante;
   });
 
-  // Dispensations ce mois (prescriptions dispensées ce mois)
+  // --- Top 10 medicaments ---
+  const medStock: Record<string, { nom: string; quantite: number }> = {};
+  lotsActifs.forEach(l => {
+    const med = l.medicament as { nom_complet?: string } | null;
+    const nom = med?.nom_complet || 'Inconnu';
+    if (!medStock[nom]) medStock[nom] = { nom, quantite: 0 };
+    medStock[nom].quantite += l.quantite_restante;
+  });
+  const topMedicaments = Object.values(medStock).sort((a, b) => b.quantite - a.quantite).slice(0, 10);
+
+  // --- Prescriptions this month ---
+  const prescriptionsMois = prescriptions.filter(p => {
+    const d = new Date(p.created_at);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  // --- Dispensations this month (statut='Dispensée' and updated this month) ---
   const dispensationsMois = prescriptions.filter(p => {
     if (p.statut !== 'Dispensée') return false;
     const d = new Date(p.updated_at || p.created_at);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
-  // Consommation mensuelle - 6 derniers mois
-  const moisLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-  const consommationMensuelle: { mois: string; quantite: number }[] = [];
+  // --- Transferts en cours ---
+  const transfertsEnCours = transferts.filter(t =>
+    ['Demandé', 'Approuvé', 'En transit'].includes(t.statut)
+  );
+
+  // --- Alertes non lues (recent 10) ---
+  const alertesNonLues = alertes.filter(a => !a.lue).slice(0, 10);
+
+  // --- Répartition par centre ---
+  const repartitionParCentre = centres.map(c => {
+    const patientCount = patients.filter(p => p.centre_id === c.id).length;
+    const lotCount = lotsActifs.filter(l => l.centre_id === c.id).length;
+    const prescriptionCount = prescriptions.filter(p => p.centre_id === c.id).length;
+    return {
+      id: c.id,
+      nom: c.nom,
+      code: c.code,
+      patients: patientCount,
+      lots: lotCount,
+      prescriptions: prescriptionCount,
+    };
+  });
+
+  // --- Last 6 months prescription counts ---
+  const consommation6Mois: { mois: string; label: string; count: number }[] = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(currentYear, currentMonth - i, 1);
-    const moisIndex = d.getMonth();
-    const annee = d.getFullYear();
+    const m = d.getMonth();
+    const y = d.getFullYear();
     const count = prescriptions.filter(p => {
-      if (p.statut !== 'Dispensée') return false;
-      const pd = new Date(p.updated_at || p.created_at);
-      return pd.getMonth() === moisIndex && pd.getFullYear() === annee;
+      const pd = new Date(p.created_at);
+      return pd.getMonth() === m && pd.getFullYear() === y;
     }).length;
-    consommationMensuelle.push({
-      mois: `${moisLabels[moisIndex]} ${annee}`,
-      quantite: count,
+    const label = d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+    consommation6Mois.push({
+      mois: `${y}-${String(m + 1).padStart(2, '0')}`,
+      label,
+      count,
     });
   }
 
-  // Patients par centre
-  const patientParCentre = centres.map(c => ({
-    centre: c.nom.replace('CTH ', ''),
-    count: patients.filter(p => p.centre_id === c.id).length,
-  }));
-
-  // Répartition sévérité
+  // --- Repartition severite ---
   const repartitionSeverite = [
     { severite: 'Sévère', count: patientsSeveres.length },
     { severite: 'Modérée', count: patientsModeres.length },
@@ -117,6 +132,7 @@ export async function getDashboardStats() {
   ];
 
   return {
+    // Patients
     total_patients: patients.length,
     patients_actifs: patientsActifs.length,
     patients_hemophilie_a: patientsHA.length,
@@ -125,28 +141,32 @@ export async function getDashboardStats() {
     patients_moderes: patientsModeres.length,
     patients_mineurs: patientsMineurs.length,
     patients_decedes: patientsDecedes.length,
+    repartition_severite: repartitionSeverite,
+
+    // Stock
     total_lots_actifs: lotsActifs.length,
     lots_proches_expiration: lotsProchesExpiration.length,
     lots_expires: lotsExpires.length,
     stock_faible_count: stockFaible.length,
-    prescriptions_en_attente: prescriptionsEnAttente.length,
+    stock_par_type_facteur: Object.entries(stockParType).map(([type, quantite]) => ({ type, quantite })),
+    top_medicaments: topMedicaments,
+
+    // Activity
     prescriptions_mois: prescriptionsMois.length,
     dispensations_mois: dispensationsMois.length,
     transferts_en_cours: transfertsEnCours.length,
-    alertes_non_lues: alertesNonLues.length,
-    stock_par_type_facteur: Object.entries(stockParType).map(([type, quantite]) => ({ type, quantite })),
-    consommation_mensuelle: consommationMensuelle,
-    top_medicaments: (() => {
-      const medStock: Record<string, { nom: string; quantite: number }> = {};
-      lotsActifs.forEach(l => {
-        const med = l.medicament as { nom_complet?: string } | null;
-        const nom = med?.nom_complet || 'Inconnu';
-        if (!medStock[nom]) medStock[nom] = { nom, quantite: 0 };
-        medStock[nom].quantite += l.quantite_restante;
-      });
-      return Object.values(medStock).sort((a, b) => b.quantite - a.quantite).slice(0, 5);
-    })(),
-    patients_par_centre: patientParCentre,
-    repartition_severite: repartitionSeverite,
+    alertes_non_lues_count: alertesNonLues.length,
+
+    // Detailed data
+    alertes_recentes: alertesNonLues.map(a => ({
+      id: a.id,
+      type: a.type as string,
+      niveau: a.niveau as string,
+      titre: a.titre,
+      message: a.message,
+      created_at: a.created_at,
+    })),
+    repartition_par_centre: repartitionParCentre,
+    consommation_6_mois: consommation6Mois,
   };
 }

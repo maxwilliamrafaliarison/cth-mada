@@ -107,3 +107,18 @@ export async function updatePrescriptionStatut(id: string, statut: string) {
 
   revalidatePath('/dashboard/prescriptions');
 }
+
+export async function getPatientDispensationHistory(patientId: string) {
+  await requireAuth();
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from('prescriptions')
+    .select('id, numero, created_at, statut, medecin:utilisateurs(nom, prenom), lignes:lignes_prescription(quantite_prescrite, quantite_dispensee, medicament:medicaments(nom_complet, type_facteur))')
+    .eq('patient_id', patientId)
+    .in('statut', ['Dispensée', 'Partiellement dispensée'])
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+}
