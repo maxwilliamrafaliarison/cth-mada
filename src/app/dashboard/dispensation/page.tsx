@@ -4,7 +4,7 @@ import Navbar from '@/components/layout/Navbar';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Pill, UserCircle, Package, CheckCircle, Clock, X, XCircle, Warning,
-  MagnifyingGlass,
+  MagnifyingGlass, Printer,
 } from '@phosphor-icons/react';
 import { getPrescriptions, updatePrescriptionStatut } from '@/app/actions/prescriptions';
 import { getLots, updateLot } from '@/app/actions/stock';
@@ -37,6 +37,10 @@ export default function DispensationPage() {
 
   // Toast
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Receipt modal
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [receiptData, setReceiptData] = useState<any>(null);
 
   // Search
   const [search, setSearch] = useState('');
@@ -140,6 +144,16 @@ export default function DispensationPage() {
       await updatePrescriptionStatut(dispensingRx.id, 'Dispensée');
 
       showToast('success', `Prescription dispensée pour ${dispensingRx.patient?.nom} ${dispensingRx.patient?.prenom}`);
+
+      // Save data for receipt before clearing
+      setReceiptData({
+        ...dispensingRx,
+        date_dispensation: new Date().toISOString(),
+        pharmacien: profile ? `${profile.prenom} ${profile.nom}` : '',
+        centre: profile?.centre,
+        lotSelections: { ...lotSelections },
+      });
+
       setDispensingRx(null);
       setLotSelections({});
       await fetchData();
@@ -513,6 +527,133 @@ export default function DispensationPage() {
                       Confirmer la dispensation
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Bon de dispensation / Accusé de réception */}
+        {receiptData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm no-print">
+            <div className="bg-white w-full max-w-lg mx-4 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+              {/* Receipt content — printable */}
+              <div id="receipt-content" className="p-6">
+                <div className="text-center border-b-2 border-[var(--primary)] pb-3 mb-4">
+                  <h1 className="text-lg font-bold text-[var(--primary)]">CENTRE DE TRAITEMENT DE L&apos;HÉMOPHILIE</h1>
+                  <h2 className="text-sm font-bold text-[var(--primary)]">MADAGASCAR</h2>
+                  <p className="text-xs text-gray-500 mt-1">{receiptData.centre?.nom || 'CTH Madagascar'}</p>
+                </div>
+
+                <h3 className="text-center text-sm font-bold uppercase tracking-wider text-gray-700 mb-4">
+                  Bon de dispensation
+                </h3>
+
+                <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+                  <div><span className="text-gray-500">N° Prescription :</span> <strong>{receiptData.numero}</strong></div>
+                  <div><span className="text-gray-500">Date :</span> <strong>{new Date(receiptData.date_dispensation).toLocaleDateString('fr-FR')}</strong></div>
+                  <div><span className="text-gray-500">Patient :</span> <strong>{receiptData.patient?.nom} {receiptData.patient?.prenom}</strong></div>
+                  <div><span className="text-gray-500">N° CTH :</span> <strong>{receiptData.patient?.numero_cth || '-'}</strong></div>
+                  <div><span className="text-gray-500">Médecin :</span> <strong>Dr {receiptData.medecin?.nom} {receiptData.medecin?.prenom}</strong></div>
+                  <div><span className="text-gray-500">Pharmacien :</span> <strong>{receiptData.pharmacien}</strong></div>
+                  {receiptData.patient?.type_hemophilie && (
+                    <div><span className="text-gray-500">Diagnostic :</span> <strong>Hémophilie {receiptData.patient.type_hemophilie}</strong></div>
+                  )}
+                  {receiptData.patient?.severite && (
+                    <div><span className="text-gray-500">Sévérité :</span> <strong>{receiptData.patient.severite}</strong></div>
+                  )}
+                </div>
+
+                <table className="w-full text-xs border-collapse mb-4">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="text-left p-2 border">Médicament</th>
+                      <th className="text-center p-2 border">N° Lot</th>
+                      <th className="text-center p-2 border">Qté</th>
+                      <th className="text-center p-2 border">Expiration</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(receiptData.lignes || []).map((ligne: Record<string, unknown>) => {
+                      const med = ligne.medicament as Record<string, string> | null;
+                      const picks = receiptData.lotSelections?.[ligne.id as string] || [];
+                      return picks.filter((p: LotSelection) => p.quantite_a_deduire > 0).map((pick: LotSelection, i: number) => (
+                        <tr key={`${ligne.id}-${i}`}>
+                          {i === 0 && (
+                            <td className="p-2 border font-medium" rowSpan={picks.filter((p: LotSelection) => p.quantite_a_deduire > 0).length}>
+                              {med?.nom_complet || '-'}
+                            </td>
+                          )}
+                          <td className="p-2 border text-center font-mono">{pick.numero_lot}</td>
+                          <td className="p-2 border text-center font-bold">{pick.quantite_a_deduire} UI</td>
+                          <td className="p-2 border text-center">{new Date(pick.date_expiration).toLocaleDateString('fr-FR')}</td>
+                        </tr>
+                      ));
+                    })}
+                  </tbody>
+                </table>
+
+                {receiptData.notes && (
+                  <div className="text-xs mb-4">
+                    <span className="text-gray-500">Notes :</span> {receiptData.notes}
+                  </div>
+                )}
+
+                <div className="border-t pt-3 mt-4 text-center">
+                  <p className="text-[0.6rem] text-gray-400">
+                    Ce document atteste de la remise des médicaments ci-dessus au patient.
+                    <br />Médicaments issus de dons internationaux — Distribution gratuite.
+                  </p>
+                  <div className="flex justify-between mt-6 text-xs">
+                    <div className="text-center">
+                      <div className="border-b border-gray-300 w-32 mb-1" />
+                      <p className="text-gray-500">Signature pharmacien</p>
+                    </div>
+                    <div className="text-center">
+                      <div className="border-b border-gray-300 w-32 mb-1" />
+                      <p className="text-gray-500">Signature patient</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons (not printed) */}
+              <div className="p-4 border-t bg-gray-50 rounded-b-2xl flex gap-3">
+                <button
+                  className="btn btn-glass flex-1"
+                  onClick={() => setReceiptData(null)}
+                >
+                  <X size={16} />
+                  Fermer
+                </button>
+                <button
+                  className="btn btn-primary flex-1"
+                  onClick={() => {
+                    const content = document.getElementById('receipt-content');
+                    if (!content) return;
+                    const win = window.open('', '_blank');
+                    if (!win) return;
+                    win.document.write(`
+                      <html><head><title>Bon de dispensation</title>
+                      <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; font-size: 12px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ccc; padding: 6px; }
+                        th { background: #f3f3f3; }
+                        h1 { font-size: 16px; margin: 0; color: #001965; }
+                        h2 { font-size: 13px; margin: 0; color: #001965; }
+                        h3 { font-size: 12px; }
+                        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+                        @media print { button { display: none; } }
+                      </style></head><body>
+                      ${content.innerHTML}
+                      <script>window.print(); window.close();</script>
+                      </body></html>
+                    `);
+                    win.document.close();
+                  }}
+                >
+                  <Printer size={16} weight="duotone" />
+                  Imprimer le bon
                 </button>
               </div>
             </div>

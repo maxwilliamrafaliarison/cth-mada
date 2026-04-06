@@ -13,19 +13,19 @@ import type { Role } from '@/lib/rbac';
 import type { TypeSaignement } from '@/types';
 
 const TYPES_SAIGNEMENT: TypeSaignement[] = [
-  'Hemarthrose du genou droit', 'Hemarthrose du genou gauche', 'Hemarthrose de la cheville',
-  'Hemarthrose du coude', "Hemarthrose de l'epaule", 'Hemarthrose de la hanche',
-  'Hematome intramusculaire', 'Hematome sous-dural', 'Hematome du psoas',
-  'Epistaxis', 'Gingivorragie', 'Hematurie', 'Hemorragie digestive',
-  'Hemorragie post-circoncision', 'Hemorragie post-traumatique', 'Hemorragie post-operatoire',
+  'Hémarthrose du genou droit', 'Hémarthrose du genou gauche', 'Hémarthrose de la cheville',
+  'Hémarthrose du coude', "Hémarthrose de l'épaule", 'Hémarthrose de la hanche',
+  'Hématome intramusculaire', 'Hématome sous-dural', 'Hématome du psoas',
+  'Épistaxis', 'Gingivorragie', 'Hématurie', 'Hémorragie digestive',
+  'Hémorragie post-circoncision', 'Hémorragie post-traumatique', 'Hémorragie post-opératoire',
   'Ecchymose', 'Autre',
-] as unknown as TypeSaignement[];
+];
 
 const statutConfig: Record<string, { icon: typeof CheckCircle; class: string }> = {
   'En attente': { icon: Clock, class: 'badge-warning' },
-  'Dispensee': { icon: CheckCircle, class: 'badge-success' },
-  'Annulee': { icon: XCircle, class: 'badge-danger' },
-  'Partiellement dispensee': { icon: Clock, class: 'badge-info' },
+  'Dispensée': { icon: CheckCircle, class: 'badge-success' },
+  'Annulée': { icon: XCircle, class: 'badge-danger' },
+  'Partiellement dispensée': { icon: Clock, class: 'badge-info' },
 };
 
 interface LigneForm {
@@ -226,7 +226,7 @@ function PrescriptionsPage() {
   const handleConfirm = async (id: string) => {
     setConfirmingId(id);
     try {
-      await updatePrescriptionStatut(id, 'Dispensee');
+      await updatePrescriptionStatut(id, 'Dispensée');
       showToast('Prescription dispensee avec succes.', 'success');
       setLoading(true);
       await fetchData();
@@ -302,8 +302,8 @@ function PrescriptionsPage() {
             <select className="glass-select" value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
               <option value="">Tous les statuts</option>
               <option value="En attente">En attente</option>
-              <option value="Dispensee">Dispensee</option>
-              <option value="Annulee">Annulee</option>
+              <option value="Dispensée">Dispensée</option>
+              <option value="Annulée">Annulée</option>
             </select>
             {canCreatePrescription && (
               <button className="btn btn-primary" onClick={() => { resetForm(); setShowForm(true); }}>
@@ -408,8 +408,8 @@ function PrescriptionsPage() {
                     <select className="glass-select w-full" value={formTypeTraitement} onChange={e => setFormTypeTraitement(e.target.value)}>
                       <option value="Demande">A la demande (episode aigu)</option>
                       <option value="Prophylaxie">Prophylaxie</option>
-                      <option value="Pre-operatoire">Pre-operatoire</option>
-                      <option value="Post-operatoire">Post-operatoire</option>
+                      <option value="Pré-opératoire">Pré-opératoire</option>
+                      <option value="Post-opératoire">Post-opératoire</option>
                     </select>
                   </div>
                   <div>
