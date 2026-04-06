@@ -1,8 +1,9 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase-server';
+import { createAdminClient, requireAuth } from '@/lib/supabase-server';
 
 export async function getDashboardStats() {
+  await requireAuth();
   const supabase = createAdminClient();
 
   // Execute all queries in parallel

@@ -7,10 +7,12 @@ import { useEffect, useState } from 'react';
 import {
   SquaresFour, UsersThree, Package, ClipboardText, Pill,
   ArrowsLeftRight, Barcode, FileText, BellRinging, GearSix,
-  CaretLeft, CaretRight, SignOut
+  CaretLeft, CaretRight, SignOut, BookOpen
 } from '@phosphor-icons/react';
 import { logout } from '@/app/actions/auth';
 import { createBrowserSupabaseClient } from '@/lib/supabase';
+import { useUser } from '@/contexts/UserContext';
+import { canAccessRoute } from '@/lib/rbac';
 
 const navItems = [
   { nom: 'Tableau de bord', href: '/dashboard', icon: SquaresFour },
@@ -22,6 +24,7 @@ const navItems = [
   { nom: 'Scanner', href: '/dashboard/scanner', icon: Barcode },
   { nom: 'Rapports', href: '/dashboard/rapports', icon: FileText },
   { nom: 'Alertes', href: '/dashboard/alertes', icon: BellRinging },
+  { nom: 'Journal Pharmacie', href: '/dashboard/journal', icon: BookOpen },
   { nom: 'Administration', href: '/dashboard/admin', icon: GearSix },
 ];
 
@@ -35,17 +38,19 @@ interface SidebarProps {
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const [alertCount, setAlertCount] = useState(0);
-  const [userEmail, setUserEmail] = useState('');
+  const { profile } = useUser();
+
+  const displayName = profile
+    ? `${profile.role === 'medecin' ? 'Dr ' : ''}${profile.prenom} ${profile.nom}`
+    : '';
+
+  // Filter nav items based on role
+  const visibleItems = profile
+    ? navItems.filter(item => canAccessRoute(profile.role, item.href))
+    : navItems;
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
-
-    // Get current user
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setUserEmail(user.email || '');
-    });
-
-    // Get unread alerts count
     supabase.from('alertes').select('id', { count: 'exact', head: true }).eq('lue', false)
       .then(({ count }) => setAlertCount(count || 0));
   }, []);
@@ -73,7 +78,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       {/* Navigation */}
       <nav className="flex-1 py-3 px-2 overflow-y-auto">
         <ul className="space-y-0.5">
-          {navItems.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
             const Icon = item.icon;
 
@@ -113,8 +118,11 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
       {/* User info + logout */}
       <div className="border-t border-white/10 px-2 py-2">
-        {!collapsed && userEmail && (
-          <p className="text-blue-200/50 text-[0.65rem] truncate px-3 mb-1">{userEmail}</p>
+        {!collapsed && displayName && (
+          <p className="text-blue-200/70 text-[0.7rem] truncate px-3 mb-1 font-medium">{displayName}</p>
+        )}
+        {!collapsed && profile?.email && (
+          <p className="text-blue-200/40 text-[0.6rem] truncate px-3 mb-1">{profile.email}</p>
         )}
         <form action={logout}>
           <button

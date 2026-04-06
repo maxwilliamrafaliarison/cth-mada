@@ -1,13 +1,16 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase-server';
+import { createAdminClient, requireAuth } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
+import { hasPermission } from '@/lib/rbac';
+import type { Role } from '@/lib/rbac';
 
 export async function getPrescriptions(filters?: {
   search?: string;
   statut?: string;
   centre_id?: string;
 }) {
+  await requireAuth();
   const supabase = createAdminClient();
   let query = supabase
     .from('prescriptions')
@@ -30,6 +33,13 @@ export async function getPrescriptions(filters?: {
 }
 
 export async function createPrescription(prescriptionData: Record<string, unknown>, lignes: Record<string, unknown>[]) {
+  const { profile } = await requireAuth();
+  const role = profile.role as Role;
+
+  if (!hasPermission(role, 'prescriptions', 'create')) {
+    throw new Error('Permission refusée: vous ne pouvez pas créer de prescriptions.');
+  }
+
   const supabase = createAdminClient();
 
   // Generate prescription number
@@ -41,7 +51,7 @@ export async function createPrescription(prescriptionData: Record<string, unknow
 
   const { data, error } = await supabase
     .from('prescriptions')
-    .insert({ ...prescriptionData, numero })
+    .insert({ ...prescriptionData, numero, medecin_id: profile.id })
     .select()
     .single();
 
@@ -63,7 +73,20 @@ export async function createPrescription(prescriptionData: Record<string, unknow
   return data;
 }
 
+// Pharmacien confirms prescription, admin/medecin can update status
 export async function updatePrescriptionStatut(id: string, statut: string) {
+  const { profile } = await requireAuth();
+  const role = profile.role as Role;
+
+  // Pharmacien can only 'confirm' (Dispensée)
+  if (role === 'pharmacien' && statut === 'Dispensée') {
+    if (!hasPermission(role, 'prescriptions', 'confirm')) {
+      throw new Error('Permission refusée.');
+    }
+  } else if (!hasPermission(role, 'prescriptions', 'update')) {
+    throw new Error('Permission refusée: vous ne pouvez pas modifier cette prescription.');
+  }
+
   const supabase = createAdminClient();
   const { error } = await supabase
     .from('prescriptions')
@@ -71,5 +94,16 @@ export async function updatePrescriptionStatut(id: string, statut: string) {
     .eq('id', id);
 
   if (error) throw new Error(error.message);
+
+  // Journal entry when pharmacist confirms
+  if (role === 'pharmacien' && statut === 'Dispensée') {
+    await supabase.from('journal_pharmacie').insert({
+      utilisateur_id: profile.id,
+      action: 'confirmation_prescription',
+      details: { prescription_id: id, statut },
+      centre_id: profile.centre_id,
+    });
+  }
+
   revalidatePath('/dashboard/prescriptions');
 }

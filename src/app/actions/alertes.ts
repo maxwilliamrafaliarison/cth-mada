@@ -1,12 +1,15 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase-server';
+import { createAdminClient, requireAuth } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
+import { hasPermission } from '@/lib/rbac';
+import type { Role } from '@/lib/rbac';
 
 export async function getAlertes(filters?: {
   type?: string;
   lue?: boolean;
 }) {
+  await requireAuth();
   const supabase = createAdminClient();
   let query = supabase
     .from('alertes')
@@ -26,6 +29,7 @@ export async function getAlertes(filters?: {
 }
 
 export async function markAlertAsRead(id: string) {
+  await requireAuth();
   const supabase = createAdminClient();
   const { error } = await supabase
     .from('alertes')
@@ -37,6 +41,7 @@ export async function markAlertAsRead(id: string) {
 }
 
 export async function markAllAlertsAsRead() {
+  await requireAuth();
   const supabase = createAdminClient();
   const { error } = await supabase
     .from('alertes')
@@ -48,6 +53,13 @@ export async function markAllAlertsAsRead() {
 }
 
 export async function deleteAlerte(id: string) {
+  const { profile } = await requireAuth();
+  const role = profile.role as Role;
+
+  if (!hasPermission(role, 'alertes', 'delete')) {
+    throw new Error('Permission refusée.');
+  }
+
   const supabase = createAdminClient();
   const { error } = await supabase
     .from('alertes')
@@ -59,6 +71,13 @@ export async function deleteAlerte(id: string) {
 }
 
 export async function createAlerte(alerteData: Record<string, unknown>) {
+  const { profile } = await requireAuth();
+  const role = profile.role as Role;
+
+  if (!hasPermission(role, 'alertes', 'create')) {
+    throw new Error('Permission refusée.');
+  }
+
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from('alertes')

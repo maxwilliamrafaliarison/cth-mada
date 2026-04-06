@@ -36,3 +36,20 @@ export function createAdminClient() {
     },
   });
 }
+
+// Require authenticated user + profile; throws if not found
+export async function requireAuth() {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Non authentifié');
+
+  const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from('utilisateurs')
+    .select('*, centre:centres(*)')
+    .eq('auth_id', user.id)
+    .single();
+
+  if (!profile) throw new Error('Profil introuvable');
+  return { user, profile };
+}

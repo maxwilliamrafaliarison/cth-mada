@@ -1,12 +1,15 @@
 'use server';
 
-import { createAdminClient } from '@/lib/supabase-server';
+import { createAdminClient, requireAuth } from '@/lib/supabase-server';
 import { revalidatePath } from 'next/cache';
+import { hasPermission } from '@/lib/rbac';
+import type { Role } from '@/lib/rbac';
 
 export async function getTransferts(filters?: {
   statut?: string;
   centre_id?: string;
 }) {
+  await requireAuth();
   const supabase = createAdminClient();
   let query = supabase
     .from('transferts')
@@ -23,9 +26,15 @@ export async function getTransferts(filters?: {
 }
 
 export async function createTransfert(transfertData: Record<string, unknown>, lignes: Record<string, unknown>[]) {
+  const { profile } = await requireAuth();
+  const role = profile.role as Role;
+
+  if (!hasPermission(role, 'transferts', 'create')) {
+    throw new Error('Permission refusée: vous ne pouvez pas créer de transferts.');
+  }
+
   const supabase = createAdminClient();
 
-  // Generate transfer number
   const year = new Date().getFullYear();
   const { count } = await supabase
     .from('transferts')
@@ -34,7 +43,7 @@ export async function createTransfert(transfertData: Record<string, unknown>, li
 
   const { data, error } = await supabase
     .from('transferts')
-    .insert({ ...transfertData, numero })
+    .insert({ ...transfertData, numero, demandeur_id: profile.id })
     .select()
     .single();
 
@@ -56,6 +65,13 @@ export async function createTransfert(transfertData: Record<string, unknown>, li
 }
 
 export async function updateTransfertStatut(id: string, statut: string, extraData?: Record<string, unknown>) {
+  const { profile } = await requireAuth();
+  const role = profile.role as Role;
+
+  if (!hasPermission(role, 'transferts', 'update')) {
+    throw new Error('Permission refusée: vous ne pouvez pas modifier ce transfert.');
+  }
+
   const supabase = createAdminClient();
   const updateData: Record<string, unknown> = { statut, ...extraData };
 

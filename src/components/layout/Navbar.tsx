@@ -1,7 +1,10 @@
 'use client';
 
 import { BellRinging, MagnifyingGlass, UserCircle, Hospital, CaretDown } from '@phosphor-icons/react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useUser } from '@/contexts/UserContext';
+import { ROLE_LABELS_SHORT } from '@/lib/rbac';
+import { createBrowserSupabaseClient } from '@/lib/supabase';
 
 interface NavbarProps {
   titre: string;
@@ -9,6 +12,37 @@ interface NavbarProps {
 
 export default function Navbar({ titre }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
+  const [centreDropdown, setCentreDropdown] = useState(false);
+  const { profile, currentCentreId, setCurrentCentreId } = useUser();
+  const [alertCount, setAlertCount] = useState(0);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Get display name
+  const displayName = profile
+    ? `${profile.role === 'medecin' ? 'Dr ' : ''}${profile.prenom} ${profile.nom}`
+    : '';
+  const roleLabel = profile ? ROLE_LABELS_SHORT[profile.role] : '';
+
+  // Current centre name
+  const currentCentre = profile?.centres?.find(c => c.id === currentCentreId);
+  const centreName = currentCentre?.nom?.replace('CTH ', '') || 'Centre';
+
+  useEffect(() => {
+    const supabase = createBrowserSupabaseClient();
+    supabase.from('alertes').select('id', { count: 'exact', head: true }).eq('lue', false)
+      .then(({ count }) => setAlertCount(count || 0));
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setCentreDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   return (
     <header className="glass-navbar sticky top-0 z-30 px-4 md:px-6 py-3">
@@ -39,19 +73,42 @@ export default function Navbar({ titre }: NavbarProps) {
             </button>
           </div>
 
-          {/* Centre actuel */}
-          <button className="btn-glass btn-sm flex items-center gap-2">
-            <Hospital size={18} weight="duotone" className="text-[var(--primary)]" />
-            <span className="text-sm font-medium hidden md:inline">CTH Antananarivo</span>
-            <CaretDown size={14} className="text-[var(--text-muted)]" />
-          </button>
+          {/* Centre actuel — avec dropdown si multi-centres */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => profile?.centres && profile.centres.length > 1 && setCentreDropdown(!centreDropdown)}
+              className="btn-glass btn-sm flex items-center gap-2"
+            >
+              <Hospital size={18} weight="duotone" className="text-[var(--primary)]" />
+              <span className="text-sm font-medium hidden md:inline">{centreName}</span>
+              {profile?.centres && profile.centres.length > 1 && (
+                <CaretDown size={14} className="text-[var(--text-muted)]" />
+              )}
+            </button>
+            {centreDropdown && profile?.centres && profile.centres.length > 1 && (
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-gray-200/50 py-1 min-w-[200px] z-50">
+                {profile.centres.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => { setCurrentCentreId(c.id); setCentreDropdown(false); }}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors ${c.id === currentCentreId ? 'text-[var(--primary)] font-semibold bg-blue-50/50' : 'text-[var(--text-primary)]'}`}
+                  >
+                    {c.nom}
+                    {c.est_principal && <span className="text-[0.6rem] text-[var(--text-muted)] ml-2">(principal)</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Notifications */}
           <button className="relative p-2 rounded-xl hover:bg-white/50 transition-colors text-[var(--text-secondary)]">
             <BellRinging size={20} weight="duotone" />
-            <span className="absolute -top-0.5 -right-0.5 bg-[var(--secondary)] text-white text-[0.6rem] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">
-              4
-            </span>
+            {alertCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 bg-[var(--secondary)] text-white text-[0.6rem] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center">
+                {alertCount}
+              </span>
+            )}
           </button>
 
           {/* Profil */}
@@ -60,8 +117,8 @@ export default function Navbar({ titre }: NavbarProps) {
               <UserCircle size={20} weight="duotone" className="text-white" />
             </div>
             <div className="hidden md:block text-left">
-              <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">Dr FETY André</p>
-              <p className="text-[0.65rem] text-[var(--text-muted)]">Médecin</p>
+              <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">{displayName}</p>
+              <p className="text-[0.65rem] text-[var(--text-muted)]">{roleLabel}</p>
             </div>
           </button>
         </div>
