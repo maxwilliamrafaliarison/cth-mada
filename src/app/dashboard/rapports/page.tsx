@@ -115,7 +115,7 @@ function generatePrintHTML(data: ReportData, periode: string, mois: string, cent
   .chart-label { font-size: 9px; color: #6b7280; margin-top: 4px; text-align: center; }
   .chart-value { font-size: 9px; font-weight: 700; color: #1e40af; margin-bottom: 2px; }
   .alert-item { display: flex; gap: 8px; margin-bottom: 6px; padding: 6px 8px; background: #fafafa; border-radius: 4px; border-left: 3px solid; }
-  .alert-badge { display: inline-block; font-size: 8px; font-weight: 700; color: white; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; }
+  .alert-badge, .disp-badge { display: inline-block; font-size: 8px; font-weight: 700; color: white; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; white-space: nowrap; }
   .alert-type { font-size: 9px; color: #6b7280; }
   .alert-title { font-size: 10px; font-weight: 600; }
   .footer { border-top: 2.5px solid #1e40af; padding-top: 10px; margin-top: 30px; text-align: center; font-size: 9px; color: #9ca3af; }
@@ -253,11 +253,44 @@ function generatePrintHTML(data: ReportData, periode: string, mois: string, cent
     </div>`).join('')}
   </div>
 
+  <!-- Section 8: Historique des dispensations -->
+  <div class="page-break"></div>
+  <div class="section">
+    <div class="section-title"><span class="section-icon">8</span> Historique des dispensations</div>
+    ${data.dispensations_detail.length === 0 ? '<div style="font-size:10px;color:#6b7280;padding:8px;">Aucune dispensation enregistree pour cette periode.</div>' : `
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>N° Prescription</th>
+          <th>Patient</th>
+          <th>N° CTH</th>
+          <th>Type</th>
+          <th>Medecin prescripteur</th>
+          <th>Medicaments dispenses</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.dispensations_detail.map(d => `
+        <tr class="avoid-break">
+          <td style="white-space:nowrap">${new Date(d.date).toLocaleDateString('fr-FR')}</td>
+          <td><span style="font-family:monospace;font-size:10px">${d.numero}</span></td>
+          <td class="font-bold">${d.patient_nom}</td>
+          <td style="font-family:monospace;font-size:10px">${d.patient_cth}</td>
+          <td>${d.patient_type}</td>
+          <td>${d.medecin_nom}</td>
+          <td style="font-size:10px">${d.medicaments.map(m => `${m.nom} (${m.quantite} UI)`).join(', ') || '-'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:8px;font-size:10px;color:#6b7280;text-align:right;">Total : ${data.dispensations_detail.length} dispensation(s)</div>
+    `}
+  </div>
+
   <!-- Footer -->
   <div class="footer">
     <div class="footer-line"><strong>CTH Madagascar</strong> &mdash; Centre de Traitement de l'Hemophilie de Madagascar</div>
     <div class="footer-line">Rapport genere automatiquement &bull; Document confidentiel &mdash; Diffusion restreinte</div>
-    <div class="footer-line">Page 1</div>
   </div>
 </div>
 
@@ -697,6 +730,60 @@ export default function RapportsPage() {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+
+              {/* Section 8: Historique des dispensations */}
+              <div className="mb-8">
+                <h3 className="text-sm font-bold text-[var(--primary)] uppercase tracking-wider mb-4 border-b border-gray-200 pb-2 flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-[var(--primary)] text-white text-[10px] font-bold">8</span>
+                  <Pill size={16} weight="duotone" className="text-[var(--primary)]" />
+                  Historique des dispensations
+                </h3>
+                {data.dispensations_detail.length === 0 ? (
+                  <p className="text-xs text-[var(--text-muted)] py-4">Aucune dispensation enregistree pour cette periode.</p>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="py-2 px-2 text-left font-semibold text-xs">Date</th>
+                            <th className="py-2 px-2 text-left font-semibold text-xs">N° Prescription</th>
+                            <th className="py-2 px-2 text-left font-semibold text-xs">Patient</th>
+                            <th className="py-2 px-2 text-left font-semibold text-xs">N° CTH</th>
+                            <th className="py-2 px-2 text-left font-semibold text-xs">Type</th>
+                            <th className="py-2 px-2 text-left font-semibold text-xs">Medecin</th>
+                            <th className="py-2 px-2 text-left font-semibold text-xs">Medicaments</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.dispensations_detail.map((d, i) => (
+                            <tr key={i} className="border-b border-gray-50">
+                              <td className="py-2 px-2 text-xs whitespace-nowrap">{new Date(d.date).toLocaleDateString('fr-FR')}</td>
+                              <td className="py-2 px-2 font-mono text-xs">{d.numero}</td>
+                              <td className="py-2 px-2 font-semibold text-xs">{d.patient_nom}</td>
+                              <td className="py-2 px-2 font-mono text-xs">{d.patient_cth}</td>
+                              <td className="py-2 px-2 text-xs">{d.patient_type}</td>
+                              <td className="py-2 px-2 text-xs">{d.medecin_nom}</td>
+                              <td className="py-2 px-2 text-xs">
+                                {d.medicaments.map((m, j) => (
+                                  <span key={j}>
+                                    {m.nom} <span className="font-semibold">({m.quantite} UI)</span>
+                                    {j < d.medicaments.length - 1 && ', '}
+                                  </span>
+                                ))}
+                                {d.medicaments.length === 0 && '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="text-xs text-[var(--text-muted)] text-right mt-2">
+                      Total : {data.dispensations_detail.length} dispensation(s)
+                    </p>
+                  </>
                 )}
               </div>
 

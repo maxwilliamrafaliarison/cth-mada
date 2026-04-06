@@ -13,13 +13,19 @@ export async function getReportData() {
     transfertsResult,
     alertesResult,
     centresResult,
+    dispensationsResult,
   ] = await Promise.all([
-    supabase.from('patients').select('id, type_hemophilie, severite, statut, centre_id'),
+    supabase.from('patients').select('id, nom, prenom, numero_cth, type_hemophilie, severite, statut, centre_id'),
     supabase.from('lots').select('id, medicament_id, centre_id, quantite_restante, date_expiration, actif, medicament:medicaments(nom_complet, type_facteur)'),
     supabase.from('prescriptions').select('id, statut, created_at, updated_at, centre_id'),
     supabase.from('transferts').select('id, statut'),
     supabase.from('alertes').select('id, type, niveau, titre, message, lue, created_at').order('created_at', { ascending: false }).limit(50),
     supabase.from('centres').select('id, nom, code'),
+    supabase.from('prescriptions')
+      .select('id, numero, statut, created_at, updated_at, patient:patients(nom, prenom, numero_cth, type_hemophilie), medecin:utilisateurs!prescriptions_medecin_id_fkey(nom, prenom), lignes:lignes_prescription(quantite, medicament:medicaments(nom_complet))')
+      .in('statut', ['Dispensée', 'Partiellement dispensée'])
+      .order('updated_at', { ascending: false })
+      .limit(50),
   ]);
 
   const patients = patientsResult.data || [];
@@ -28,6 +34,7 @@ export async function getReportData() {
   const transferts = transfertsResult.data || [];
   const alertes = alertesResult.data || [];
   const centres = centresResult.data || [];
+  const dispensationsRaw = dispensationsResult.data || [];
 
   const now = new Date();
   const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
@@ -168,5 +175,28 @@ export async function getReportData() {
     })),
     repartition_par_centre: repartitionParCentre,
     consommation_6_mois: consommation6Mois,
+
+    // Historique dispensations détaillé
+    dispensations_detail: dispensationsRaw.map((d: Record<string, unknown>) => {
+      const patient = d.patient as Record<string, string> | null;
+      const medecin = d.medecin as Record<string, string> | null;
+      const lignes = (d.lignes as Array<Record<string, unknown>>) || [];
+      return {
+        numero: d.numero as string,
+        date: (d.updated_at || d.created_at) as string,
+        statut: d.statut as string,
+        patient_nom: patient ? `${patient.prenom} ${patient.nom}` : 'Inconnu',
+        patient_cth: patient?.numero_cth || '-',
+        patient_type: patient?.type_hemophilie || '-',
+        medecin_nom: medecin ? `Dr ${medecin.prenom} ${medecin.nom}` : '-',
+        medicaments: lignes.map((l) => {
+          const med = l.medicament as Record<string, string> | null;
+          return {
+            nom: med?.nom_complet || 'Inconnu',
+            quantite: l.quantite as number,
+          };
+        }),
+      };
+    }),
   };
 }
