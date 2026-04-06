@@ -50,9 +50,9 @@ export default function PatientsPage() {
   return (
     <>
       <Navbar titre="Gestion des patients" />
-      <main className="p-6">
+      <main className="p-4 md:p-6">
         {/* En-tête stats rapides */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
             <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
               <UsersThree size={22} weight="duotone" className="text-[var(--primary)]" />
@@ -94,7 +94,7 @@ export default function PatientsPage() {
         {/* Barre d'actions */}
         <div className="glass-card !p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[240px]">
+            <div className="relative flex-1 min-w-[180px] md:min-w-[240px]">
               <MagnifyingGlass size={16} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input
                 type="text"
@@ -128,7 +128,7 @@ export default function PatientsPage() {
           </div>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-4 md:gap-6">
           {/* Table patients */}
           <div className={`glass-card !p-0 overflow-hidden ${selected ? 'flex-1' : 'w-full'}`}>
             <div className="overflow-x-auto">
@@ -198,7 +198,7 @@ export default function PatientsPage() {
 
           {/* Panel détail patient */}
           {selected && (
-            <div className="glass-card w-[380px] flex-shrink-0 animate-slide-in">
+            <div className="glass-card w-full lg:w-[380px] flex-shrink-0 animate-slide-in">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-[var(--text-primary)]">Fiche Patient</h3>
                 <button onClick={() => setSelectedPatient(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)]">✕</button>
@@ -263,7 +263,7 @@ export default function PatientsPage() {
             <div className="glass-card w-full max-w-3xl max-h-[85vh] overflow-y-auto !bg-white/90" onClick={e => e.stopPropagation()}>
               <h3 className="text-lg font-bold text-[var(--text-primary)] mb-5">Nouveau patient</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">N° CTH *</label><input type="text" className="glass-input w-full" placeholder="Ex: 102A" /></div>
+                <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">N° CTH *</label><input type="text" className="glass-input w-full" placeholder="Ex : 102A" /></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">N° WBDR</label><input type="text" className="glass-input w-full" placeholder="Identifiant WFH" /></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Nom *</label><input type="text" className="glass-input w-full" placeholder="Nom de famille" /></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Prénom *</label><input type="text" className="glass-input w-full" placeholder="Prénom(s)" /></div>
@@ -273,14 +273,14 @@ export default function PatientsPage() {
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Groupe sanguin</label><select className="glass-select w-full"><option value="">Sélectionner</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(gs => <option key={gs} value={gs}>{gs}</option>)}</select></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Type d&apos;hémophilie *</label><select className="glass-select w-full"><option value="HA">Hémophilie A (déficit FVIII)</option><option value="HB">Hémophilie B (déficit FIX)</option></select></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Sévérité *</label><select className="glass-select w-full"><option value="Sévère">Sévère (&lt;1% facteur)</option><option value="Modérée">Modérée (1-5% facteur)</option><option value="Mineure">Mineure (5-40% facteur)</option></select></div>
-                <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Taux de facteur</label><input type="text" className="glass-input w-full" placeholder="Ex: <1%, 0.015, 0.05" /></div>
+                <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Taux de facteur</label><input type="text" className="glass-input w-full" placeholder="Ex : &lt;1%, 0.015, 0.05" /></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Date de diagnostic</label><input type="date" className="glass-input w-full" /></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Origine ethnique</label><select className="glass-select w-full"><option value="">Sélectionner</option>{ETHNIES_MADAGASCAR.map(e => <option key={e} value={e}>{e}</option>)}</select></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Centre de rattachement *</label><select className="glass-select w-full">{centres.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}</select></div>
                 <div className="md:col-span-2"><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Adresse</label><input type="text" className="glass-input w-full" placeholder="Adresse complète" /></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Téléphone</label><input type="tel" className="glass-input w-full" placeholder="034 XX XXX XX" /></div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Email</label><input type="email" className="glass-input w-full" placeholder="email@exemple.com" /></div>
-                <div className="md:col-span-2"><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Circonstances de découverte de la maladie</label><textarea className="glass-input w-full h-20 resize-none" placeholder="Ex: hémorragie labiale post-morsure, hémorragie post-circoncision..." /></div>
+                <div className="md:col-span-2"><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Circonstances de découverte de la maladie</label><textarea className="glass-input w-full h-20 resize-none" placeholder="Ex : hémorragie labiale post-morsure, hémorragie post-circoncision..." /></div>
                 <div className="md:col-span-2 flex items-center gap-6">
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="w-4 h-4 rounded" />Présence d&apos;inhibiteurs</label>
                   <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="w-4 h-4 rounded" />Traitement à domicile</label>

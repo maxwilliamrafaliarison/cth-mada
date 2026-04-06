@@ -16,13 +16,13 @@ export default function TransfertsPage() {
   return (
     <>
       <Navbar titre="Transferts inter-centres" />
-      <main className="p-6">
+      <main className="p-4 md:p-6">
         <div className="glass-card !p-4 mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <p className="text-sm text-[var(--text-secondary)]">
               Les centres provinciaux demandent l&apos;approvisionnement au <strong>CTH Antananarivo (centre central)</strong>. Le stock est déduit du centre source à l&apos;expédition.
             </p>
-            <button className="btn btn-primary"><Plus size={16} weight="bold" />Demande de transfert</button>
+            <button className="btn btn-primary flex-shrink-0"><Plus size={16} weight="bold" />Demande de transfert</button>
           </div>
         </div>
 
@@ -43,7 +43,7 @@ export default function TransfertsPage() {
                       <span className="font-mono text-xs text-[var(--text-muted)]">{trf.numero}</span>
                       <span className={`badge ${config.class}`}><StatusIcon size={12} weight="duotone" />{trf.statut}</span>
                     </div>
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
                       <div className="px-3 py-2 rounded-lg bg-white/50 border border-gray-100">
                         <p className="text-xs text-[var(--text-muted)]">De</p>
                         <p className="font-bold text-sm text-[var(--text-primary)]">{source?.nom}</p>
@@ -63,7 +63,7 @@ export default function TransfertsPage() {
                             <Package size={14} weight="duotone" className="text-[var(--accent)]" />
                             <span className="font-medium">{med?.nom_complet}</span>
                             <span className="text-[var(--text-muted)]">•</span>
-                            <span>Demandé: <strong>{ligne.quantite_demandee}</strong></span>
+                            <span>Demandé : <strong>{ligne.quantite_demandee}</strong></span>
                             {lot && <span className="font-mono text-xs text-[var(--text-muted)]">(Lot {lot.numero_lot})</span>}
                           </div>
                         );

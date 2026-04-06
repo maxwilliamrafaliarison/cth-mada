@@ -24,7 +24,7 @@ export default function PatientsBySeverity({ data }: Props) {
       </div>
 
       {/* Donut-like visualization */}
-      <div className="flex items-center gap-6">
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
         <div className="relative w-32 h-32 flex-shrink-0">
           <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
             {data.reduce((acc, item, i) => {

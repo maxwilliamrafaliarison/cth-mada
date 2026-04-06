@@ -29,11 +29,11 @@ export default function ScannerPage() {
   return (
     <>
       <Navbar titre="Scanner de codes-barres" />
-      <main className="p-6">
+      <main className="p-4 md:p-6">
         <div className="max-w-3xl mx-auto">
           <div className="glass-card mb-6">
             <h3 className="font-bold text-[var(--text-primary)] mb-4">Mode de saisie</h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button onClick={() => setMode('douchette')} className={`p-4 rounded-xl border-2 transition-all text-center hover:shadow-lg hover:-translate-y-0.5 duration-300 ${mode === 'douchette' ? 'border-[var(--primary)] bg-blue-50/50' : 'border-transparent bg-white/30 hover:bg-white/50'}`}>
                 <Barcode size={32} weight="duotone" className={`mx-auto mb-2 ${mode === 'douchette' ? 'text-[var(--primary)]' : 'text-[var(--text-muted)]'}`} />
                 <p className="text-sm font-semibold">Douchette USB</p>
@@ -80,7 +80,7 @@ export default function ScannerPage() {
                 <h4 className="font-bold text-lg mb-2">Saisie manuelle</h4>
                 <p className="text-sm text-[var(--text-secondary)] mb-4">Entrez le numéro de lot du médicament.</p>
                 <div className="flex gap-2 max-w-md mx-auto">
-                  <input type="text" className="glass-input flex-1 text-center font-mono" placeholder="Ex: P100506556, 2714PR7..." value={codeInput} onChange={e => setCodeInput(e.target.value)} onKeyDown={handleKeyDown} />
+                  <input type="text" className="glass-input flex-1 text-center font-mono" placeholder="Ex : P100506556, 2714PR7..." value={codeInput} onChange={e => setCodeInput(e.target.value)} onKeyDown={handleKeyDown} />
                   <button className="btn btn-primary" onClick={() => handleSearch(codeInput.trim())}>Rechercher</button>
                 </div>
                 <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -102,7 +102,7 @@ export default function ScannerPage() {
           {result && resultMed && (
             <div className="glass-card !bg-emerald-50/50 !border-emerald-200/50 animate-fade-in">
               <div className="flex items-center gap-3 mb-4"><CheckCircle size={24} weight="duotone" className="text-emerald-500" /><h4 className="font-bold text-emerald-800">Médicament identifié</h4></div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Produit</span><span className="font-bold">{resultMed.nom_complet}</span></div>
                   <div className="flex justify-between text-sm"><span className="text-[var(--text-muted)]">Type de facteur</span><span className="badge badge-primary">{resultMed.type_facteur}</span></div>

@@ -18,7 +18,7 @@ export default function StockParCentre({ data }: Props) {
       <div className="space-y-3">
         {data.map((item, i) => (
           <div key={item.centre} className="flex items-center gap-3">
-            <span className="text-xs font-medium text-[var(--text-secondary)] w-32 truncate flex-shrink-0">{item.centre}</span>
+            <span className="text-xs font-medium text-[var(--text-secondary)] w-24 sm:w-32 truncate flex-shrink-0">{item.centre}</span>
             <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"

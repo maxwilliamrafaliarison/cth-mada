@@ -13,10 +13,10 @@ export default function RapportsPage() {
   return (
     <>
       <Navbar titre="Rapports" />
-      <main className="p-6">
+      <main className="p-4 md:p-6">
         <div className="glass-card mb-6">
           <h3 className="font-bold text-[var(--text-primary)] mb-4">Générer un rapport</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Type de rapport</label><select className="glass-select w-full" value={periode} onChange={e => setPeriode(e.target.value)}><option value="mensuel">Rapport mensuel</option><option value="trimestriel">Rapport trimestriel</option><option value="annuel">Rapport annuel</option><option value="stock">État du stock</option><option value="consommation">Consommation</option></select></div>
             <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Période</label><input type="month" className="glass-input w-full" value={mois} onChange={e => setMois(e.target.value)} /></div>
             <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Centre</label><select className="glass-select w-full" value={centreId} onChange={e => setCentreId(e.target.value)}><option value="">Tous les centres</option>{centres.map(c => <option key={c.id} value={c.id}>{c.nom}</option>)}</select></div>
@@ -28,16 +28,16 @@ export default function RapportsPage() {
         </div>
 
         <div className="glass-card">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
             <h3 className="font-bold text-[var(--text-primary)]">Aperçu du rapport</h3>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <button className="btn btn-glass btn-sm"><Printer size={14} weight="duotone" />Imprimer</button>
               <button className="btn btn-primary btn-sm"><DownloadSimple size={14} weight="duotone" />Télécharger PDF</button>
               <button className="btn btn-accent btn-sm"><PaperPlaneTilt size={14} weight="duotone" />Envoyer à Dr Fitahiana</button>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-inner border border-gray-100 max-w-4xl mx-auto">
+          <div className="bg-white rounded-xl p-4 md:p-8 shadow-inner border border-gray-100 max-w-4xl mx-auto">
             <div className="text-center border-b-2 border-[var(--primary)] pb-4 mb-6">
               <h1 className="text-xl font-bold text-[var(--primary)]">CENTRE DE TRAITEMENT DE L&apos;HÉMOPHILIE</h1>
               <h2 className="text-lg font-bold text-[var(--primary)]">MADAGASCAR</h2>

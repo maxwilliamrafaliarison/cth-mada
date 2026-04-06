@@ -57,8 +57,8 @@ export default function StockPage() {
   return (
     <>
       <Navbar titre="Gestion du stock" />
-      <main className="p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+      <main className="p-4 md:p-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
           <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
             <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center"><Package size={22} weight="duotone" className="text-emerald-600" /></div>
             <div><p className="text-2xl font-bold">{totalUnites.toLocaleString('fr-FR')}</p><p className="text-xs text-[var(--text-muted)]">Unités en stock</p></div>
@@ -69,7 +69,7 @@ export default function StockPage() {
           </div>
           <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
             <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center"><Clock size={22} weight="duotone" className="text-amber-600" /></div>
-            <div><p className="text-2xl font-bold text-amber-600">{alertesExp}</p><p className="text-xs text-[var(--text-muted)]">Proches expiration (&lt;90j)</p></div>
+            <div><p className="text-2xl font-bold text-amber-600">{alertesExp}</p><p className="text-xs text-[var(--text-muted)]">Expiration proche (&lt;90j)</p></div>
           </div>
           <div className="glass-card !p-4 flex items-center gap-3 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
             <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center"><Warning size={22} weight="duotone" className="text-red-600" /></div>
@@ -79,7 +79,7 @@ export default function StockPage() {
 
         <div className="glass-card !p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[240px]">
+            <div className="relative flex-1 min-w-[180px] md:min-w-[240px]">
               <MagnifyingGlass size={16} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input type="text" placeholder="Rechercher un médicament, n° de lot..." className="glass-input w-full pl-10" value={search} onChange={e => setSearch(e.target.value)} />
             </div>

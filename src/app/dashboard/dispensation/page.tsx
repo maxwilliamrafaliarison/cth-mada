@@ -11,7 +11,7 @@ export default function DispensationPage() {
   return (
     <>
       <Navbar titre="Dispensation" />
-      <main className="p-6">
+      <main className="p-4 md:p-6">
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-3 h-3 rounded-full bg-amber-400 pulse-alert" />
@@ -30,8 +30,8 @@ export default function DispensationPage() {
                 const patient = patients.find(p => p.id === rx.patient_id);
                 return (
                   <div key={rx.id} className={`glass-card ${rx.urgence ? '!border-red-300 !bg-red-50/40' : ''} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300`}>
-                    <div className="flex items-start gap-4">
-                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${rx.urgence ? 'bg-red-100' : 'bg-blue-50'}`}>
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
+                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 hidden sm:flex ${rx.urgence ? 'bg-red-100' : 'bg-blue-50'}`}>
                         <UserCircle size={32} weight="duotone" className={rx.urgence ? 'text-red-600' : 'text-blue-600'} />
                       </div>
                       <div className="flex-1">
@@ -51,13 +51,13 @@ export default function DispensationPage() {
                                 <Pill size={22} weight="duotone" className="text-[var(--accent)] flex-shrink-0" />
                                 <div className="flex-1">
                                   <p className="font-semibold text-sm">{med?.nom_complet}</p>
-                                  <p className="text-xs text-[var(--text-muted)]">Quantité prescrite: <strong>{ligne.quantite_prescrite} {med?.unite}</strong>{ligne.posologie && ` • ${ligne.posologie}`}</p>
+                                  <p className="text-xs text-[var(--text-muted)]">Quantité prescrite : <strong>{ligne.quantite_prescrite} {med?.unite}</strong>{ligne.posologie && ` • ${ligne.posologie}`}</p>
                                 </div>
                                 {lotSuggere && (
                                   <div className="text-right">
                                     <p className="text-xs text-[var(--text-muted)]">Lot suggéré (FEFO)</p>
                                     <p className="text-sm font-mono font-bold text-[var(--primary)]">{lotSuggere.numero_lot}</p>
-                                    <p className="text-[0.65rem] text-[var(--text-muted)]">Reste: {lotSuggere.quantite_restante} • Exp: {new Date(lotSuggere.date_expiration).toLocaleDateString('fr-FR')}</p>
+                                    <p className="text-[0.65rem] text-[var(--text-muted)]">Reste : {lotSuggere.quantite_restante} • Exp. : {new Date(lotSuggere.date_expiration).toLocaleDateString('fr-FR')}</p>
                                   </div>
                                 )}
                               </div>

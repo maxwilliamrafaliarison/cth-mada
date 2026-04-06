@@ -14,7 +14,7 @@ export default function AdminPage() {
   return (
     <>
       <Navbar titre="Administration" />
-      <main className="p-6">
+      <main className="p-4 md:p-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Utilisateurs */}
           <div className="glass-card">
@@ -73,15 +73,15 @@ export default function AdminPage() {
             </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/30">
-                <div className="flex items-center gap-2"><Shield size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">Seuil alerte expiration</span></div>
+                <div className="flex items-center gap-2"><Shield size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">Seuil d&apos;alerte expiration</span></div>
                 <span className="font-bold text-sm">90 jours</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/30">
-                <div className="flex items-center gap-2"><Database size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">Seuil stock faible</span></div>
+                <div className="flex items-center gap-2"><Database size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">Seuil de stock faible</span></div>
                 <span className="font-bold text-sm">10 unités</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/30">
-                <div className="flex items-center gap-2"><Envelope size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">Email rapports</span></div>
+                <div className="flex items-center gap-2"><Envelope size={18} weight="duotone" className="text-[var(--text-muted)]" /><span className="text-sm">E-mail des rapports</span></div>
                 <span className="text-sm text-[var(--text-secondary)]">fitahiana@cth-madagascar.mg</span>
               </div>
             </div>
@@ -104,7 +104,7 @@ export default function AdminPage() {
               </div>
               <button className="btn btn-glass btn-sm w-full">
                 <Database size={14} weight="duotone" />
-                Importer données Excel existantes
+                Importer les données Excel existantes
               </button>
             </div>
           </div>

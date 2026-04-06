@@ -25,16 +25,19 @@ const navItems = [
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
 
   return (
     <aside
-      className={`glass-sidebar fixed left-0 top-0 h-full z-40 flex flex-col transition-all duration-300 ${
-        collapsed ? 'w-[72px]' : 'w-[260px]'
-      }`}
+      className={`glass-sidebar fixed left-0 top-0 h-full z-40 flex flex-col transition-all duration-300
+        ${collapsed ? 'w-[72px]' : 'w-[260px]'}
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
+      `}
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-white/10">
@@ -60,6 +63,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={onMobileClose}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative ${
                     isActive
                       ? 'bg-white/15 text-white shadow-lg shadow-black/10'

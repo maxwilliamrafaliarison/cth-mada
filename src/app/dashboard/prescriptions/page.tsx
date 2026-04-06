@@ -38,10 +38,10 @@ export default function PrescriptionsPage() {
   return (
     <>
       <Navbar titre="Prescriptions médicales" />
-      <main className="p-6">
+      <main className="p-4 md:p-6">
         <div className="glass-card !p-4 mb-6">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[240px]">
+            <div className="relative flex-1 min-w-[180px] md:min-w-[240px]">
               <MagnifyingGlass size={16} weight="duotone" className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
               <input type="text" placeholder="Rechercher une prescription..." className="glass-input w-full pl-10" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
@@ -106,14 +106,14 @@ export default function PrescriptionsPage() {
               <h3 className="text-lg font-bold text-[var(--text-primary)] mb-5">Nouvelle prescription</h3>
               <div className="space-y-4">
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Patient *</label><select className="glass-select w-full"><option value="">Sélectionner un patient</option>{patients.filter(p => p.statut === 'Actif').map(p => <option key={p.id} value={p.id}>{p.numero_cth} - {p.nom} {p.prenom} ({p.type_hemophilie === 'HA' ? 'Hémo. A' : 'Hémo. B'})</option>)}</select></div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Type de traitement *</label><select className="glass-select w-full"><option value="Demande">À la demande (épisode aigu)</option><option value="Prophylaxie">Prophylaxie</option><option value="Pré-opératoire">Pré-opératoire</option><option value="Post-opératoire">Post-opératoire</option></select></div>
                   <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Type de saignement aigu</label><select className="glass-select w-full"><option value="">Non applicable</option>{TYPES_SAIGNEMENT.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
                 </div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Médicament prescrit *</label><select className="glass-select w-full"><option value="">Sélectionner un médicament</option>{medicaments.map(m => <option key={m.id} value={m.id}>{m.nom_complet} ({m.type_facteur} - {m.indication})</option>)}</select></div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Quantité prescrite (UI/mg) *</label><input type="number" className="glass-input w-full" placeholder="Ex: 1000" /></div>
-                  <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Posologie</label><input type="text" className="glass-input w-full" placeholder="Ex: 500 UI x 2/jour" /></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Quantité prescrite (UI/mg) *</label><input type="number" className="glass-input w-full" placeholder="Ex : 1000" /></div>
+                  <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Posologie</label><input type="text" className="glass-input w-full" placeholder="Ex : 500 UI x 2/jour" /></div>
                 </div>
                 <div><label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Précisions complémentaires</label><textarea className="glass-input w-full h-20 resize-none" placeholder="Description chirurgie, remarques..." /></div>
                 <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="w-4 h-4 rounded" /><span className="font-medium text-red-600">Prescription urgente</span></label>

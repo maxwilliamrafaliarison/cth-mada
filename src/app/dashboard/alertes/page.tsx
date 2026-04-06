@@ -27,7 +27,7 @@ export default function AlertesPage() {
   return (
     <>
       <Navbar titre="Alertes" />
-      <main className="p-6">
+      <main className="p-4 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-[var(--text-secondary)]"><strong>{nonLues.length}</strong> alerte{nonLues.length > 1 ? 's' : ''} non lue{nonLues.length > 1 ? 's' : ''}</p>
           <button className="btn btn-glass btn-sm"><Check size={14} weight="bold" />Tout marquer comme lu</button>

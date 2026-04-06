@@ -21,7 +21,7 @@ export default function DashboardPage() {
       <AlertesBanner />
 
       {/* KPI Cards - Première rangée */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           titre="Patients enregistrés"
           valeur={stats.total_patients}
@@ -60,11 +60,11 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards - Deuxième rangée: Stock & Activité */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           titre="Lots en stock"
           valeur={stats.total_lots_actifs}
-          sousTitre={`${stats.lots_proches_expiration} proches expiration`}
+          sousTitre={`${stats.lots_proches_expiration} en expiration proche`}
           icon={Package}
           couleur="success"
           delayClass="delay-1"
@@ -99,7 +99,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards - Troisième rangée */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <StatCard
           titre="Transferts en cours"
           valeur={stats.transferts_en_cours}
@@ -136,12 +136,12 @@ export default function DashboardPage() {
       </div>
 
       {/* Graphiques et détails */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <StockChart data={stats.stock_par_type_facteur} />
         <PatientsBySeverity data={stats.repartition_severite} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <RecentPrescriptions />
         <StockParCentre data={stats.patients_par_centre} />
       </div>
