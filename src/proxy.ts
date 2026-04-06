@@ -33,6 +33,11 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Allow auth callback routes without authentication
+  if (request.nextUrl.pathname.startsWith('/auth/')) {
+    return supabaseResponse;
+  }
+
   // Redirect unauthenticated users to login
   if (
     !user &&

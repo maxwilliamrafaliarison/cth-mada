@@ -58,9 +58,10 @@ export async function forgotPassword(formData: FormData) {
     return { error: 'Veuillez entrer votre adresse e-mail.' };
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'https://cth-mada.vercel.app' : 'http://localhost:3000'}/auth/reset-password`,
+    redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
   });
 
   if (error) {
